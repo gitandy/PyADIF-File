@@ -1,0 +1,7 @@
+/.idea
+/build
+/dist
+/temp
+/venv
+__pycache__
+/pyadif.egg-info
