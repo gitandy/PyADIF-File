@@ -17,6 +17,12 @@ The header or each record is/must be a dictionary in the format
 
 You have to care about reading/writing the content from/to the file.
 
+Installation
+------------
+The package is available via PyPI
+
+    pip install adif-file
+
 Exporting ADI
 -------------
 If an empty header is provided, the fields are generated with suiting defaults.
