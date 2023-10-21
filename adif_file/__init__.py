@@ -3,12 +3,16 @@
 import re
 import datetime
 
+import adif_file.__version__ as __v__
+
 __author_name__ = 'Andreas Schawo'
 __author_email__ = 'andreas@schawo.de'
 __copyright__ = 'Copyright 2023 by Andreas Schawo,licensed under CC BY-SA 4.0'
 __proj_name__ = 'PyADIF-File'
-__version__ = '0.1'
+__version__ = __v__.__version__[1:].split('-')[0]
 __description__ = 'Convert ADIF ADI content to dictionary and vice versa'
+
+del __v__
 
 
 class TooMuchHeadersException(Exception):
