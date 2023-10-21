@@ -19,6 +19,13 @@ class TagDefinitionException(Exception):
     pass
 
 
+class StringNotASCIIException(Exception):
+    pass
+
+
+REGEX_ASCII = re.compile(r'[ -~]*')
+
+
 def unpack(data: str) -> dict:
     """Unpack header or record part to dictionary
     The parameters are converted to uppercase"""
@@ -86,21 +93,32 @@ def adi2dict(adi: str) -> dict:
 
 def pack(param: str, value: str) -> str:
     """Generates ADI tag if value is not empty
+    Does not generate tags for *_INTL types as required by specification.
 
     :param param: the tag parameter (converte to uppercase)
     :param value: the tag value
     :return: <param:length>value
     """
 
-    return f'<{param.upper()}:{len(str(value))}>{value}' if value else ''
+    if not param.endswith('_INTL'):
+        if re.fullmatch(REGEX_ASCII, value):
+            return f'<{param.upper()}:{len(str(value))}>{value}' if value else ''
+        else:
+            raise StringNotASCIIException(f'Value "{value}" in parameter "{param}" contains non ASCII characters')
+    else:
+        return ''
 
 
 def dict2adi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> str:
     """Takes a dictionary and converts it to ADI format
-    Parameters can be in upper or lower case. The output is upper case.
-    User has to care that parameters are not doubled!
+    Parameters can be in upper or lower case. The output is upper case. The user must take care that parameters are not doubled!
+    *_INTL parameters are ignored as they are not allowed in ADI.
+    Empty records are skipped.
 
-    If 'HEADER' is present the comment is added and missing header fields are filled with defaults."""
+    If 'HEADER' is present the comment is added and missing header fields are filled with defaults.
+
+    :param data_dict: the dictionary with header and records
+    :param comment: the comment to induce the header"""
 
     default = {'ADIF_VER': '3.1.4',
                'PROGRAMID': __proj_name__,
@@ -123,10 +141,16 @@ def dict2adi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) 
 
     if 'RECORDS' in data_dict:
         for r in data_dict['RECORDS']:
+            empty = True
             for i, pv in enumerate(zip(r.keys(), r.values()), 1):
-                data += pack(pv[0].upper(), pv[1]) + ('\n' if i % 5 == 0 else ' ')
+                tag = pack(pv[0].upper(), pv[1])
+                if tag:
+                    empty = False
+                    data += tag + ('\n' if i % 5 == 0 else ' ')
             if not data.endswith('\n'):
                 data += '\n'
-            data += '<EOR>\n\n'
+
+            if not empty:
+                data += '<EOR>\n\n'
 
     return data.strip()

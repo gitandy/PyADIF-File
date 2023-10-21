@@ -28,7 +28,10 @@ Exporting ADI
 If an empty header is provided, the fields are generated with suiting defaults.
 Missing header fields are inserted.
 
-Empty record fields are not exported at all.
+Empty record fields and records are not exported at all.
+
+*_INTL fields are not exported (see ADIF specification).
+If non ASCII characters are used the API raises an Exception.
 
 Copyright
 ---------
