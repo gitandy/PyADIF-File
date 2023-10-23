@@ -21,6 +21,11 @@ class DumpADI(unittest.TestCase):
 
         self.assertRaises(StringNotASCIIException, pack, 'NAME', 'Jörg')
 
+        # noinspection PyTypeChecker
+        self.assertEqual('<DIST:2>99', pack('DIST', 99))
+        # noinspection PyTypeChecker
+        self.assertEqual('<FREQ:5>0.138', pack('freq', 0.138))
+
     def test_20_dump_header(self):
         adi_dict = {
             'HEADER': {'PROGRAMID': 'TProg',

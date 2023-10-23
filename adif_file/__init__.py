@@ -121,15 +121,15 @@ def pack(param: str, value: str, dtype: str = None) -> str:
     """
 
     if not param.upper().endswith('_INTL'):
-        if re.fullmatch(REGEX_ASCII, value):
-            if dtype:
-                if len(dtype) > 1 or dtype not in 'BNDTSIMGEL':
-                    raise UnknownDataTypeException(f'Datatype "{dtype}" in "{param}"')
-                return f'<{param.upper()}:{len(str(value))}:{dtype}>{value}' if value else ''
-            else:
-                return f'<{param.upper()}:{len(str(value))}>{value}' if value else ''
-        else:
+        if type(value) is str and not re.fullmatch(REGEX_ASCII, value):
             raise StringNotASCIIException(f'Value "{value}" in parameter "{param}" contains non ASCII characters')
+
+        if dtype:
+            if len(dtype) > 1 or dtype not in 'BNDTSIMGEL':
+                raise UnknownDataTypeException(f'Datatype "{dtype}" in "{param}"')
+            return f'<{param.upper()}:{len(str(value))}:{dtype}>{value}' if value else ''
+        else:
+            return f'<{param.upper()}:{len(str(value))}>{value}' if value else ''
     else:
         return ''
 
