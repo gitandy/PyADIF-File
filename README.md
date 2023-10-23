@@ -5,7 +5,9 @@ Convert ADIF ADI content to dictionary and vice versa
 The required/resulting dictionary format is
 
     {
-        'HEADER': None,
+        'HEADER': 
+            {Header param: Value,
+             'USERDEFS': [list of user definitions]},
         'RECORDS': [list of records]
     }
 
@@ -13,6 +15,13 @@ The header or each record is/must be a dictionary in the format
     
     {
         ADIF parameter name: Text value,
+    }
+
+A user definition is a dictionary of
+    
+    {
+        'dtype': one char representing the type,
+        'userdef': the field definition text
     }
 
 You have to care about reading/writing the content from/to the file.
