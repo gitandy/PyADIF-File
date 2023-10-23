@@ -26,12 +26,15 @@ class TagDefinitionException(Exception):
 class StringNotASCIIException(Exception):
     pass
 
+class IllegalParameterException(Exception):
+    pass
 
 class UnknownDataTypeException(Exception):
     pass
 
 
 REGEX_ASCII = re.compile(r'[ -~]*')
+REGEX_PARAM = re.compile(r'[a-zA-Z][a-zA-Z_0-9]*')
 
 
 def unpack(data: str) -> dict:
@@ -119,6 +122,9 @@ def pack(param: str, value: str, dtype: str = None) -> str:
     :param dtype: the optional datatype (mainly used for USERDEFx in header)
     :return: <param:length>value
     """
+
+    if not re.fullmatch(REGEX_PARAM, param):
+        raise IllegalParameterException(f'Parameter "{param}" contains not allowed characters')
 
     if not param.upper().endswith('_INTL'):
         if type(value) is str and not re.fullmatch(REGEX_ASCII, value):

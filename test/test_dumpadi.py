@@ -19,7 +19,12 @@ class DumpADI(unittest.TestCase):
         self.assertEqual('<NAME:5>Joerg', pack('Name', 'Joerg'))
         self.assertEqual('', pack('name_intl', 'Joerg'))
 
+        self.assertEqual('<MY_NAME:5>Peter', pack('MY_Name', 'Peter'))
+
         self.assertRaises(StringNotASCIIException, pack, 'NAME', 'Jörg')
+        self.assertRaises(StringNotASCIIException, pack, 'NAME', 'Schloß')
+        self.assertRaises(IllegalParameterException, pack, 'MY_ NAME', 'Peter')
+        self.assertRaises(IllegalParameterException, pack, 'MY~NAME', 'Peter')
 
         # noinspection PyTypeChecker
         self.assertEqual('<DIST:2>99', pack('DIST', 99))
