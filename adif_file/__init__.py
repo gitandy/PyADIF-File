@@ -2,6 +2,7 @@
 
 import re
 import datetime
+import warnings
 
 from adif_file.__version__ import __version__ as __version_str__
 
@@ -24,10 +25,12 @@ class TagDefinitionException(Exception):
 class StringNotASCIIException(Exception):
     pass
 
+
 class IllegalParameterException(Exception):
     pass
 
-class UnknownDataTypeException(Exception):
+
+class IllegalDataTypeException(Exception):
     pass
 
 
@@ -129,8 +132,8 @@ def pack(param: str, value: str, dtype: str = None) -> str:
             raise StringNotASCIIException(f'Value "{value}" in parameter "{param}" contains non ASCII characters')
 
         if dtype:
-            if len(dtype) > 1 or dtype not in 'BNDTSIMGEL':
-                raise UnknownDataTypeException(f'Datatype "{dtype}" in "{param}"')
+            if len(dtype) > 1 or dtype not in 'BNDTSEL':
+                raise IllegalDataTypeException(f'Datatype "{dtype}" in "{param}"')
             return f'<{param.upper()}:{len(str(value))}:{dtype}>{value}' if value else ''
         else:
             return f'<{param.upper()}:{len(str(value))}>{value}' if value else ''
