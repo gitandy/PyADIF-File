@@ -1,6 +1,6 @@
 PyADIF-File
 ===========
-Convert ADIF ADI content to dictionary and vice versa
+Convert ADIF ADI content (ham radio QSO logs) to dictionary and vice versa
 
 The required/resulting dictionary format is
 
