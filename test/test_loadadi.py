@@ -34,7 +34,14 @@ class LoadADI(unittest.TestCase):
         self.assertDictEqual(exp_dict1, unpack(adi_hdr1))
         self.assertDictEqual(exp_dict2, unpack(adi_hdr2))
 
-    def test_20_goodfile(self):
+    def test_20_unpack_record(self):
+        adi_rec_app = '<APP_TESTAPP_CHANNEL:2:N>24'
+        adi_rec_name = '<NAME:4>Test'
+
+        self.assertDictEqual({'APP_TESTAPP_CHANNEL': '24'}, unpack(adi_rec_app))
+        self.assertDictEqual({'NAME': 'Test'}, unpack(adi_rec_name))
+
+    def test_50_goodfile(self):
         with open('testdata/goodfile.txt', encoding='ascii') as tf:
             adi_txt = tf.read()
 
@@ -45,7 +52,7 @@ class LoadADI(unittest.TestCase):
         self.assertEqual(3, len(adi_dict['HEADER']))
         self.assertEqual(5, len(adi_dict['RECORDS']))
 
-    def test_25_toomuchheaders(self):
+    def test_55_toomuchheaders(self):
         with open('testdata/toomuchheadersfile.txt', encoding='ascii') as tf:
             adi_txt = tf.read()
 

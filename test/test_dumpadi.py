@@ -10,14 +10,15 @@ class DumpADI(unittest.TestCase):
         self.assertEqual('<USERDEF1:19:E>SweaterSize,{S,M,L}',
                          pack('USERDEF1', 'SweaterSize,{S,M,L}', 'E'))
 
-        self.assertRaises(UnknownDataTypeException, pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'X')
-        self.assertRaises(UnknownDataTypeException, pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'NN')
+        self.assertRaises(IllegalDataTypeException, pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'X')
+        self.assertRaises(IllegalDataTypeException, pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'NN')
 
     def test_15_pack_record_tag(self):
         self.assertEqual('<NAME:5>Joerg', pack('NAME', 'Joerg'))
         self.assertEqual('<NAME:5>Joerg', pack('name', 'Joerg'))
         self.assertEqual('<NAME:5>Joerg', pack('Name', 'Joerg'))
         self.assertEqual('', pack('name_intl', 'Joerg'))
+        self.assertEqual('<APP_TESTAPP_CHANNEL:2:N>24', pack('APP_TESTAPP_CHANNEL', 24, dtype='N'))
 
         self.assertEqual('<MY_NAME:5>Peter', pack('MY_Name', 'Peter'))
 
@@ -80,8 +81,6 @@ class DumpADI(unittest.TestCase):
 <EOR>'''
 
         self.assertEqual(adi_exp, dict2adi(adi_dict))
-
-
 
 
 if __name__ == '__main__':
