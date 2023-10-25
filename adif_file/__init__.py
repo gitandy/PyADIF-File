@@ -2,7 +2,6 @@
 
 import re
 import datetime
-import warnings
 
 from adif_file.__version__ import __version__ as __version_str__
 
@@ -45,7 +44,7 @@ def unpack(data: str) -> dict:
     unpacked = {}
 
     start = -1
-    end = 0
+    end = -1
     length = 0
 
     while start < len(data):
