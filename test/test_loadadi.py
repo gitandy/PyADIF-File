@@ -1,6 +1,11 @@
+import os
 import unittest
 
 from adif_file import *
+
+
+def get_file_path(file):
+    return os.path.join(os.path.dirname(__file__), file)
 
 
 class LoadADI(unittest.TestCase):
@@ -42,7 +47,7 @@ class LoadADI(unittest.TestCase):
         self.assertDictEqual({'NAME': 'Test'}, unpack(adi_rec_name))
 
     def test_50_goodfile(self):
-        with open('testdata/goodfile.txt', encoding='ascii') as tf:
+        with open(get_file_path('testdata/goodfile.txt'), encoding='ascii') as tf:
             adi_txt = tf.read()
 
         adi_dict = adi2dict(adi_txt)
@@ -53,7 +58,7 @@ class LoadADI(unittest.TestCase):
         self.assertEqual(5, len(adi_dict['RECORDS']))
 
     def test_55_toomuchheaders(self):
-        with open('testdata/toomuchheadersfile.txt', encoding='ascii') as tf:
+        with open(get_file_path('testdata/toomuchheadersfile.txt'), encoding='ascii') as tf:
             adi_txt = tf.read()
 
         self.assertRaises(TooMuchHeadersException, adi2dict, adi_txt)
