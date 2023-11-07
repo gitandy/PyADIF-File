@@ -31,9 +31,9 @@ You have to care about reading/writing the content from/to the file.
 
 Installation
 ------------
-The package is available via PyPI
+The package is available via [PyPI](https://pypi.org/project/PyADIF-File/)
 
-    pip install adif-file
+    pip install pyadif-file
 
 Exporting ADI
 -------------
@@ -44,6 +44,10 @@ Empty record fields and records are not exported at all.
 
 *_INTL fields are not exported (see ADIF specification).
 If non ASCII characters are used the API raises an Exception.
+
+Source Code
+-----------
+The source code is available at [GitHub](https://github.com/gitandy/PyADIF-File)
 
 Copyright
 ---------
