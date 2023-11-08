@@ -1,6 +1,6 @@
 [project]
 name = "PyADIF-File"
-dynamic = ["version"]
+dynamic = ["version", "license"]
 authors = [
   { name="Andreas Schawo", email="andreas@schawo.de" },
 ]
