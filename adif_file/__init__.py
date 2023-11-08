@@ -127,7 +127,7 @@ def pack(param: str, value: str, dtype: str = None) -> str:
         raise IllegalParameterException(f'Parameter "{param}" contains not allowed characters')
 
     if not param.upper().endswith('_INTL'):
-        if type(value) is str and not re.fullmatch(REGEX_ASCII, value):
+        if isinstance(value, str) and not re.fullmatch(REGEX_ASCII, value):
             raise StringNotASCIIException(f'Value "{value}" in parameter "{param}" contains non ASCII characters')
 
         if dtype:
@@ -172,7 +172,7 @@ def dict2adi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) 
             elif p.upper() == 'USERDEFS':
                 for i, u in enumerate(data_dict['HEADER'][p], 1):
                     data += pack(f'USERDEF{i}', u['userdef'], u['dtype']) + '\n'
-        for p in default:
+        for p in default.items():
             data += pack(p, default[p]) + '\n'
         data += '<EOH>\n\n'
 
