@@ -22,9 +22,9 @@ jobs:
     - uses: actions/checkout@v3
     - name: Fake the version file
       run: |
-        echo "__version__ = '0.1'" > adif_file/__version__.py
-        echo "__branch__ = ''" >> adif_file/__version__.py
-        echo "__unclean__ = False" >> adif_file/__version__.py
+        echo "__version__ = '0.1'" > src/adif_file/__version__.py
+        echo "__branch__ = ''" >> src/adif_file/__version__.py
+        echo "__unclean__ = False" >> src/adif_file/__version__.py
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
@@ -39,7 +39,7 @@ jobs:
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 ./adif_file --count --exit-zero --max-complexity=13 --max-line-length=120 --statistics
+        flake8 ./src/adif_file --count --exit-zero --max-complexity=13 --max-line-length=120 --statistics
     - name: Test with pytest
       run: |
         pytest
