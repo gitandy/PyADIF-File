@@ -4,5 +4,5 @@
 /temp
 /venv
 __pycache__
-/PyADIF_File.egg-info
-/adif_file/__version__.py
+PyADIF_File.egg-info
+__version__.py
