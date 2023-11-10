@@ -47,7 +47,7 @@ class LoadADI(unittest.TestCase):
         self.assertDictEqual({'NAME': 'Test'}, adif_file.unpack(adi_rec_name))
 
     def test_50_goodfile(self):
-        adi_dict = adif_file.load_adi('testdata/goodfile.txt')
+        adi_dict = adif_file.load_adi(get_file_path('testdata/goodfile.txt'))
 
         self.assertIn('HEADER', adi_dict)
         self.assertIn('RECORDS', adi_dict)
@@ -55,7 +55,8 @@ class LoadADI(unittest.TestCase):
         self.assertEqual(5, len(adi_dict['RECORDS']))
 
     def test_55_toomuchheaders(self):
-        self.assertRaises(adif_file.TooMuchHeadersException, adif_file.load_adi, 'testdata/toomuchheadersfile.txt')
+        self.assertRaises(adif_file.TooMuchHeadersException, adif_file.load_adi,
+                          get_file_path('testdata/toomuchheadersfile.txt'))
 
 
 if __name__ == '__main__':

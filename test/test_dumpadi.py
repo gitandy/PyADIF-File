@@ -4,6 +4,10 @@ import unittest
 import adif_file
 
 
+def get_file_path(file):
+    return os.path.join(os.path.dirname(__file__), file)
+
+
 class DumpADI(unittest.TestCase):
     def test_10_pack_header_tag(self):
         self.assertEqual('<PROGRAMID:8>Testprog', adif_file.pack('PROGRAMID', 'Testprog'))
@@ -108,7 +112,7 @@ class DumpADI(unittest.TestCase):
 <TEST1:5>test3 <TEST2:5>test4 
 <EOR>'''
 
-        temp_file = 'testdata/~test.adi'
+        temp_file = get_file_path('testdata/~test.adi')
 
         adif_file.dump_adi(temp_file, adi_dict)
 
