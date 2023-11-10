@@ -1,37 +1,37 @@
 import os
 import unittest
 
-from adif_file import *
+import adif_file
 
 
 class DumpADI(unittest.TestCase):
     def test_10_pack_header_tag(self):
-        self.assertEqual('<PROGRAMID:8>Testprog', pack('PROGRAMID', 'Testprog'))
-        self.assertEqual('<USERDEF1:4:N>Test', pack('USERDEF1', 'Test', 'N'))
+        self.assertEqual('<PROGRAMID:8>Testprog', adif_file.pack('PROGRAMID', 'Testprog'))
+        self.assertEqual('<USERDEF1:4:N>Test', adif_file.pack('USERDEF1', 'Test', 'N'))
         self.assertEqual('<USERDEF1:19:E>SweaterSize,{S,M,L}',
-                         pack('USERDEF1', 'SweaterSize,{S,M,L}', 'E'))
+                         adif_file.pack('USERDEF1', 'SweaterSize,{S,M,L}', 'E'))
 
-        self.assertRaises(IllegalDataTypeException, pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'X')
-        self.assertRaises(IllegalDataTypeException, pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'NN')
+        self.assertRaises(adif_file.IllegalDataTypeException, adif_file.pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'X')
+        self.assertRaises(adif_file.IllegalDataTypeException, adif_file.pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'NN')
 
     def test_15_pack_record_tag(self):
-        self.assertEqual('<NAME:5>Joerg', pack('NAME', 'Joerg'))
-        self.assertEqual('<NAME:5>Joerg', pack('name', 'Joerg'))
-        self.assertEqual('<NAME:5>Joerg', pack('Name', 'Joerg'))
-        self.assertEqual('', pack('name_intl', 'Joerg'))
-        self.assertEqual('<APP_TESTAPP_CHANNEL:2:N>24', pack('APP_TESTAPP_CHANNEL', 24, dtype='N'))
+        self.assertEqual('<NAME:5>Joerg', adif_file.pack('NAME', 'Joerg'))
+        self.assertEqual('<NAME:5>Joerg', adif_file.pack('name', 'Joerg'))
+        self.assertEqual('<NAME:5>Joerg', adif_file.pack('Name', 'Joerg'))
+        self.assertEqual('', adif_file.pack('name_intl', 'Joerg'))
+        self.assertEqual('<APP_TESTAPP_CHANNEL:2:N>24', adif_file.pack('APP_TESTAPP_CHANNEL', 24, dtype='N'))
 
-        self.assertEqual('<MY_NAME:5>Peter', pack('MY_Name', 'Peter'))
+        self.assertEqual('<MY_NAME:5>Peter', adif_file.pack('MY_Name', 'Peter'))
 
-        self.assertRaises(StringNotASCIIException, pack, 'NAME', 'Jörg')
-        self.assertRaises(StringNotASCIIException, pack, 'NAME', 'Schloß')
-        self.assertRaises(IllegalParameterException, pack, 'MY_ NAME', 'Peter')
-        self.assertRaises(IllegalParameterException, pack, 'MY~NAME', 'Peter')
+        self.assertRaises(adif_file.StringNotASCIIException, adif_file.pack, 'NAME', 'Jörg')
+        self.assertRaises(adif_file.StringNotASCIIException, adif_file.pack, 'NAME', 'Schloß')
+        self.assertRaises(adif_file.IllegalParameterException, adif_file.pack, 'MY_ NAME', 'Peter')
+        self.assertRaises(adif_file.IllegalParameterException, adif_file.pack, 'MY~NAME', 'Peter')
 
         # noinspection PyTypeChecker
-        self.assertEqual('<DIST:2>99', pack('DIST', 99))
+        self.assertEqual('<DIST:2>99', adif_file.pack('DIST', 99))
         # noinspection PyTypeChecker
-        self.assertEqual('<FREQ:5>0.138', pack('freq', 0.138))
+        self.assertEqual('<FREQ:5>0.138', adif_file.pack('freq', 0.138))
 
     def test_20_dump_header(self):
         adi_dict = {
@@ -48,7 +48,7 @@ class DumpADI(unittest.TestCase):
 <CREATED_TIMESTAMP:4>1234
 <EOH>'''
 
-        self.assertEqual(exp_hdr, dumps_adi(adi_dict))
+        self.assertEqual(exp_hdr, adif_file.dumps_adi(adi_dict))
 
         # Test same with udef
         adi_udef = [{'dtype': 'E',
@@ -66,7 +66,7 @@ class DumpADI(unittest.TestCase):
 <EOH>'''
 
         adi_dict['HEADER']['USERDEFS'] = adi_udef
-        self.assertEqual(exp_hdr_udef, dumps_adi(adi_dict))
+        self.assertEqual(exp_hdr_udef, adif_file.dumps_adi(adi_dict))
 
     def test_25_dump_records(self):
         adi_dict = {
@@ -81,7 +81,7 @@ class DumpADI(unittest.TestCase):
 <TEST1:5>test3 <TEST2:5>test4 
 <EOR>'''
 
-        self.assertEqual(adi_exp, dumps_adi(adi_dict))
+        self.assertEqual(adi_exp, adif_file.dumps_adi(adi_dict))
 
     def test_30_dump_a_file(self):
         adi_dict = {
@@ -110,7 +110,7 @@ class DumpADI(unittest.TestCase):
 
         temp_file = 'testdata/~test.adi'
 
-        dump_adi(temp_file, adi_dict)
+        adif_file.dump_adi(temp_file, adi_dict)
 
         self.assertTrue(os.path.isfile(temp_file))
 
