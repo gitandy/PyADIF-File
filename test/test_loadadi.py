@@ -50,7 +50,7 @@ class LoadADI(unittest.TestCase):
         with open(get_file_path('testdata/goodfile.txt'), encoding='ascii') as tf:
             adi_txt = tf.read()
 
-        adi_dict = adi2dict(adi_txt)
+        adi_dict = loads_adi(adi_txt)
 
         self.assertIn('HEADER', adi_dict)
         self.assertIn('RECORDS', adi_dict)
@@ -61,7 +61,7 @@ class LoadADI(unittest.TestCase):
         with open(get_file_path('testdata/toomuchheadersfile.txt'), encoding='ascii') as tf:
             adi_txt = tf.read()
 
-        self.assertRaises(TooMuchHeadersException, adi2dict, adi_txt)
+        self.assertRaises(TooMuchHeadersException, loads_adi, adi_txt)
 
 
 if __name__ == '__main__':

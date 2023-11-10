@@ -47,7 +47,7 @@ class DumpADI(unittest.TestCase):
 <CREATED_TIMESTAMP:4>1234
 <EOH>'''
 
-        self.assertEqual(exp_hdr, dict2adi(adi_dict))
+        self.assertEqual(exp_hdr, dumps_adi(adi_dict))
 
         # Test same with udef
         adi_udef = [{'dtype': 'E',
@@ -65,7 +65,7 @@ class DumpADI(unittest.TestCase):
 <EOH>'''
 
         adi_dict['HEADER']['USERDEFS'] = adi_udef
-        self.assertEqual(exp_hdr_udef, dict2adi(adi_dict))
+        self.assertEqual(exp_hdr_udef, dumps_adi(adi_dict))
 
     def test_25_dump_records(self):
         adi_dict = {
@@ -80,7 +80,7 @@ class DumpADI(unittest.TestCase):
 <TEST1:5>test3 <TEST2:5>test4 
 <EOR>'''
 
-        self.assertEqual(adi_exp, dict2adi(adi_dict))
+        self.assertEqual(adi_exp, dumps_adi(adi_dict))
 
 
 if __name__ == '__main__':

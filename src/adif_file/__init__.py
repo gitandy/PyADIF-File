@@ -82,7 +82,7 @@ def unpack(data: str) -> dict:
     return unpacked
 
 
-def adi2dict(adi: str) -> dict:
+def loads_adi(adi: str) -> dict:
     """Turn ADI formated string to dictionary
     The parameters are converted to uppercase
 
@@ -90,6 +90,9 @@ def adi2dict(adi: str) -> dict:
         'HEADER': None,
         'RECORDS': [list of records]
         }
+
+    :param adi: the ADI data
+    :return: the ADI as a dict
     """
 
     doc = {'HEADER': None,
@@ -140,7 +143,7 @@ def pack(param: str, value: str, dtype: str = None) -> str:
         return ''
 
 
-def dict2adi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> str:
+def dumps_adi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> str:
     """Takes a dictionary and converts it to ADI format
     Parameters can be in upper or lower case. The output is upper case. The user must take care
     that parameters are not doubled!
