@@ -1,3 +1,4 @@
+import os
 import unittest
 
 from adif_file import *
@@ -81,6 +82,42 @@ class DumpADI(unittest.TestCase):
 <EOR>'''
 
         self.assertEqual(adi_exp, dumps_adi(adi_dict))
+
+    def test_30_dump_a_file(self):
+        adi_dict = {
+            'HEADER': {'PROGRAMID': 'TProg',
+                       'ADIF_VER': '3',
+                       'PROGRAMVERSION': '1',
+                       'CREATED_TIMESTAMP': '1234'},
+            'RECORDS': [{'TEST1': 'test',
+                         'TEST2': 'test2'},
+                        {'TEST1': 'test3',
+                         'TEST2': 'test4'}]
+        }
+
+        adi_exp = '''ADIF export by PyADIF-File 
+<PROGRAMID:5>TProg
+<ADIF_VER:1>3
+<PROGRAMVERSION:1>1
+<CREATED_TIMESTAMP:4>1234
+<EOH>
+
+<TEST1:4>test <TEST2:5>test2 
+<EOR>
+
+<TEST1:5>test3 <TEST2:5>test4 
+<EOR>'''
+
+        temp_file = 'testdata/~test.adi'
+
+        dump_adi(temp_file, adi_dict)
+
+        self.assertTrue(os.path.isfile(temp_file))
+
+        with open(temp_file) as af:
+            self.assertEqual(adi_exp, af.read())
+
+        os.remove(temp_file)
 
 
 if __name__ == '__main__':

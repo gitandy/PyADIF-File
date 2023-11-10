@@ -2,6 +2,7 @@
 
 import re
 import datetime
+from collections.abc import Iterator
 
 from adif_file.__version__ import __version__ as __version_str__
 
@@ -116,6 +117,25 @@ def loads_adi(adi: str) -> dict:
     return doc
 
 
+def load_adi(file_name: str):
+    """Turn ADI formated string to dictionary
+       The parameters are converted to uppercase
+
+           {
+           'HEADER': None,
+           'RECORDS': [list of records]
+           }
+
+       :param file_name: the file name where the ADI data is stored
+       :return: the ADI as a dict
+       """
+
+    with open(file_name, encoding='ascii') as af:
+        data = af.read()
+
+    return loads_adi(data)
+
+
 def pack(param: str, value: str, dtype: str = None) -> str:
     """Generates ADI tag if value is not empty
     Does not generate tags for *_INTL types as required by specification.
@@ -143,7 +163,7 @@ def pack(param: str, value: str, dtype: str = None) -> str:
         return ''
 
 
-def dumps_adi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> str:
+def dumpi_adi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> Iterator[str]:
     """Takes a dictionary and converts it to ADI format
     Parameters can be in upper or lower case. The output is upper case. The user must take care
     that parameters are not doubled!
@@ -155,15 +175,14 @@ def dumps_adi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__)
     with datatype as "dtype" and field definition as "userdef" instead of a string value.
 
     :param data_dict: the dictionary with header and records
-    :param comment: the comment to induce the header"""
+    :param comment: the comment to induce the header
+    :return: an iterator of chunks of the ADI:"""
 
     default = {'ADIF_VER': '3.1.4',
                'PROGRAMID': __proj_name__,
                'PROGRAMVERSION': __version__,
                'CREATED_TIMESTAMP': datetime.datetime.utcnow().strftime('%Y%m%d %H%M%S')
                }
-
-    data = ''
 
     if 'HEADER' in data_dict:
         data = comment + ' \n'
@@ -177,10 +196,12 @@ def dumps_adi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__)
                     data += pack(f'USERDEF{i}', u['userdef'], u['dtype']) + '\n'
         for p in default.items():
             data += pack(p, default[p]) + '\n'
-        data += '<EOH>\n\n'
+        data += '<EOH>'
+        yield data
 
     if 'RECORDS' in data_dict:
         for r in data_dict['RECORDS']:
+            data = ''
             empty = True
             for i, pv in enumerate(zip(r.keys(), r.values()), 1):
                 tag = pack(pv[0].upper(), pv[1])
@@ -191,6 +212,50 @@ def dumps_adi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__)
                 data += '\n'
 
             if not empty:
-                data += '<EOR>\n\n'
+                data += '<EOR>'
+                yield data
 
-    return data.strip()
+
+def dumps_adi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> str:
+    """Takes a dictionary and converts it to ADI format
+    Parameters can be in upper or lower case. The output is upper case. The user must take care
+    that parameters are not doubled!
+    *_INTL parameters are ignored as they are not allowed in ADI.
+    Empty records are skipped.
+
+    If 'HEADER' is present the comment is added and missing header fields are filled with defaults.
+    The header can contain a list of user definitions as USERDEFS. Each user definition is expected as a dictionary
+    with datatype as "dtype" and field definition as "userdef" instead of a string value.
+
+    :param data_dict: the dictionary with header and records
+    :param comment: the comment to induce the header
+    :return: the complete ADI as a string"""
+
+    return '\n\n'.join(list(dumpi_adi(data_dict, comment)))
+
+
+def dump_adi(file_name: str, data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__):
+    """Takes a dictionary and stores it to filename in ADI format
+    Parameters can be in upper or lower case. The output is upper case. The user must take care
+    that parameters are not doubled!
+    *_INTL parameters are ignored as they are not allowed in ADI.
+    Empty records are skipped.
+
+    If 'HEADER' is present the comment is added and missing header fields are filled with defaults.
+    The header can contain a list of user definitions as USERDEFS. Each user definition is expected as a dictionary
+    with datatype as "dtype" and field definition as "userdef" instead of a string value.
+
+    :param file_name: the filename to store the ADI data to
+    :param data_dict: the dictionary with header and records
+    :param comment: the comment to induce the header
+    :return: the complete ADI as a string"""
+
+    with open(file_name, 'w', encoding='ascii') as af:
+        first = True
+        for chunk in dumpi_adi(data_dict, comment):
+            if first:
+                first = False
+            else:
+                af.write('\n\n')
+
+            af.write(chunk)

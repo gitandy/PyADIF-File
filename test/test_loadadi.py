@@ -47,10 +47,7 @@ class LoadADI(unittest.TestCase):
         self.assertDictEqual({'NAME': 'Test'}, unpack(adi_rec_name))
 
     def test_50_goodfile(self):
-        with open(get_file_path('testdata/goodfile.txt'), encoding='ascii') as tf:
-            adi_txt = tf.read()
-
-        adi_dict = loads_adi(adi_txt)
+        adi_dict = load_adi('testdata/goodfile.txt')
 
         self.assertIn('HEADER', adi_dict)
         self.assertIn('RECORDS', adi_dict)
@@ -58,10 +55,7 @@ class LoadADI(unittest.TestCase):
         self.assertEqual(5, len(adi_dict['RECORDS']))
 
     def test_55_toomuchheaders(self):
-        with open(get_file_path('testdata/toomuchheadersfile.txt'), encoding='ascii') as tf:
-            adi_txt = tf.read()
-
-        self.assertRaises(TooMuchHeadersException, loads_adi, adi_txt)
+        self.assertRaises(TooMuchHeadersException, load_adi, 'testdata/toomuchheadersfile.txt')
 
 
 if __name__ == '__main__':
