@@ -77,12 +77,12 @@ class DumpADI(unittest.TestCase):
             'RECORDS': [{'TEST1': 'test',
                          'TEST2': 'test2'},
                         {'TEST1': 'test3',
-                         'TEST2': 'test4'}]}
+                         'TEST2': 'test4\r\ntest5'}]}
 
         adi_exp = '''<TEST1:4>test <TEST2:5>test2 
 <EOR>
 
-<TEST1:5>test3 <TEST2:5>test4 
+<TEST1:5>test3 <TEST2:12>test4\r\ntest5 
 <EOR>'''
 
         self.assertEqual(adi_exp, adif_file.dumps_adi(adi_dict))

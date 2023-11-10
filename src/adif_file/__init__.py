@@ -34,7 +34,7 @@ class IllegalDataTypeException(Exception):
     pass
 
 
-REGEX_ASCII = re.compile(r'[ -~]*')
+REGEX_ASCII = re.compile(r'[ -~\n\r]*')
 REGEX_PARAM = re.compile(r'[a-zA-Z][a-zA-Z_0-9]*')
 
 
