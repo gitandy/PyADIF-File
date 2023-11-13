@@ -10,9 +10,9 @@ if "%BRANCH%" EQU "master" set BRANCH=
 git status -s -uno --porcelain > status.txt
 FOR %%I in (status.txt) do set STAT_SIZE=%%~zI
 if %STAT_SIZE% GTR 0 (set UNCLEAN=True) else (set UNCLEAN=False)
-echo __version__ = '%VERSION%' > adif_file\__version__.py
-echo __branch__ = '%BRANCH%' >> adif_file\__version__.py
-echo __unclean__ = %UNCLEAN% >> adif_file\__version__.py
+echo __version__ = '%VERSION%'> src\adif_file\__version__.py
+echo __branch__ = '%BRANCH%'>> src\adif_file\__version__.py
+echo __unclean__ = %UNCLEAN%>> src\adif_file\__version__.py
 echo Version: %VERSION% %BRANCH% %UNCLEAN%
 del version.txt branch.txt status.txt
 

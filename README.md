@@ -1,9 +1,12 @@
 PyADIF-File
 ===========
 
-[![Python test & lint](https://github.com/gitandy/PyADIF-File/actions/workflows/python-test.yml/badge.svg)](https://github.com/gitandy/PyADIF-File/actions/workflows/python-test.yml)
+[![PyPI Package](https://img.shields.io/pypi/v/pyadif_file?color=%2334D058&label=PyPI%20Package)](https://pypi.org/project/pyadif_file)
+[![Test & Lint](https://github.com/gitandy/PyADIF-File/actions/workflows/python-test.yml/badge.svg)](https://github.com/gitandy/PyADIF-File/actions/workflows/python-test.yml)
+[![Python versions](https://img.shields.io/pypi/pyversions/pyadif_file.svg?color=%2334D058&label=Python)](https://pypi.org/project/pyadif_file)
 
-Convert ADIF ADI content (ham radio QSO logs) to dictionary and vice versa
+
+Convert [ADIF](https://adif.org/) ADI content (ham radio QSO logs) to dictionary and vice versa
 
 The required/resulting dictionary format is
 
