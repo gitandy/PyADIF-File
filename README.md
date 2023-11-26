@@ -30,20 +30,40 @@ A user definition is a dictionary of
         'userdef': the field definition text
     }
 
-You have to care about reading/writing the content from/to the file.
-
 Installation
 ------------
 The package is available via [PyPI](https://pypi.org/project/PyADIF-File/)
 
     pip install pyadif-file
 
-Exporting ADI
--------------
+Usage
+-----
+
+For reading and writing files you can use load_adi or dump_adi.
+There is a corresponding variant for handling string: loads_adi and dumps_adi.
+
+Here is an example for reading an ADI file:
+
+    import adif_file as af
+
+    adi = af.load_adi('qsos.adi')
+    for rec in adi['RECORDS']:
+        if "CALL" in rec:
+            print(f'QSO on {rec["QSO_DATE"]} at {rec["TIME_ON"]} with {rec["CALL"]}')
+
+    ====
+    QSO on 20231008 at 1145 with DL4BDF
+    QSO on 20231008 at 1146 with DL5HJK
+    QSO on 20231009 at 1147 with M3KJH
+    QSO on 20231010 at 1148 with HB4FDS
+
+
+### Exporting ADI
+
 If an empty header is provided, the fields are generated with suiting defaults.
 Missing header fields are inserted.
 
-Empty record fields and records are not exported at all.
+Empty record fields and empty records are not exported at all.
 
 *_INTL fields are not exported (see ADIF specification).
 If non ASCII characters are used the API raises an Exception.
