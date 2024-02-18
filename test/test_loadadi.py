@@ -4,7 +4,7 @@ import unittest
 import adif_file.adi
 
 
-def get_file_path(file):
+def get_file_path(file: str):
     return os.path.join(os.path.dirname(__file__), file)
 
 
@@ -54,9 +54,58 @@ class LoadADI(unittest.TestCase):
         self.assertEqual(3, len(adi_dict['HEADER']))
         self.assertEqual(5, len(adi_dict['RECORDS']))
 
+    def test_52_no_header(self):
+        adi_dict = adif_file.adi.load(get_file_path('testdata/goodfile_no_h.txt'))
+
+        self.assertIn('HEADER', adi_dict)
+        self.assertIn('RECORDS', adi_dict)
+        self.assertEqual(0, len(adi_dict['HEADER']))
+        self.assertEqual(5, len(adi_dict['RECORDS']))
+
     def test_55_toomuchheaders(self):
         self.assertRaises(adif_file.adi.TooMuchHeadersException, adif_file.adi.load,
                           get_file_path('testdata/toomuchheadersfile.txt'))
+
+    def test_60_skiprecords(self):
+        adi_dict = adif_file.adi.load(get_file_path('testdata/goodfile.txt'), 3)
+        rec_dict = {'QSO_DATE': '20231008', 'TIME_ON': '1754', 'RST_SENT': '59',
+                    'RST_RCVD': '59', 'BAND': '2190M', 'MODE': 'AM', 'FREQ': '0.137',
+                    'TX_PWR': '4.0', 'STATION_CALLSIGN': 'XX1XXX', 'MY_GRIDSQUARE': 'JO35uj27'}
+
+        self.assertIn('HEADER', adi_dict)
+        self.assertIn('RECORDS', adi_dict)
+        self.assertEqual(3, len(adi_dict['HEADER']))
+        self.assertEqual(2, len(adi_dict['RECORDS']))
+        self.assertDictEqual(rec_dict, adi_dict['RECORDS'][0])
+
+    def test_65_skiprec_noh(self):
+        adi_dict = adif_file.adi.load(get_file_path('testdata/goodfile_no_h.txt'), 3)
+        rec_dict = {'QSO_DATE': '20231008', 'TIME_ON': '1754', 'RST_SENT': '59',
+                    'RST_RCVD': '59', 'BAND': '2190M', 'MODE': 'AM', 'FREQ': '0.137',
+                    'TX_PWR': '4.0', 'STATION_CALLSIGN': 'XX1XXX', 'MY_GRIDSQUARE': 'JO35uj27'}
+
+        self.assertIn('HEADER', adi_dict)
+        self.assertIn('RECORDS', adi_dict)
+        self.assertEqual(0, len(adi_dict['HEADER']))
+        self.assertEqual(2, len(adi_dict['RECORDS']))
+        self.assertDictEqual(rec_dict, adi_dict['RECORDS'][0])
+
+    def test_70_loadi(self):
+        adi_txt = '''<QSO_DATE:8>20231008 <TIME_ON:4>1145 <CALL:6>dl4bdf<eor>
+<QSO_DATE:8>20231008 <TIME_ON:4>1146 <CALL:6>DL5HJK <NAME:5>Peter <eor>
+<QSO_DATE:8>20231008 <TIME_ON:4>1340 <RST_SENT:2>59<eor>
+<QSO_DATE:8>20231008 <TIME_ON:4>1754<eor>
+<eor>
+<QSO_DATE:8>20231008 <MODE:2>AM <eor>'''
+
+        rec_list = ({},
+                    {'QSO_DATE': '20231008', 'TIME_ON': '1340', 'RST_SENT': '59'},
+                    {'QSO_DATE': '20231008', 'TIME_ON': '1754'},
+                    {},
+                    {'QSO_DATE': '20231008', 'MODE': 'AM'})
+
+        for exp, rec in zip(rec_list, adif_file.adi.loadi(adi_txt, 2)):
+            self.assertDictEqual(exp, rec)
 
 
 if __name__ == '__main__':

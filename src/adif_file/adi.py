@@ -79,7 +79,34 @@ def unpack(data: str) -> dict:
     return unpacked
 
 
-def loads(adi: str) -> dict:
+def loadi(adi: str, skip: int = 0) -> Iterator[dict]:
+    """Turn ADI formated string to header/records as an iterator over dict
+    The skip option is useful if you want to watch a file for new records only. This saves processing time.
+
+    :param adi: the ADI data
+    :param skip: skip first number of records (does not apply for header)
+    :return: an iterator of records (first record is the header even if not available)
+    """
+
+    record_data = adi
+    if not adi.startswith('<'):  # If a header is available
+        hr_list = re.split(r'<[eE][oO][hH]>', adi)
+        if len(hr_list) > 2:
+            raise TooMuchHeadersException()
+
+        yield unpack(hr_list[0])
+        record_data = hr_list[1]
+    else:  # Empty record for missing header
+        yield {}
+
+    i = 0
+    for rec in re.finditer(r'(.*?)<[eE][oO][rR]>', record_data, re.S):
+        if i >= skip:
+            yield unpack(rec.groups()[0])
+        i += 1
+
+
+def loads(adi: str, skip: int = 0) -> dict:
     """Turn ADI formated string to dictionary
     The parameters are converted to uppercase
 
@@ -88,7 +115,11 @@ def loads(adi: str) -> dict:
         'RECORDS': [list of records]
         }
 
+    The skip option is useful if you want to watch a file for new records only. This saves processing time.
+    In this case consider to use loadi() directly.
+
     :param adi: the ADI data
+    :param skip: skip first number of records (does not apply for header)
     :return: the ADI as a dict
     """
 
@@ -96,25 +127,19 @@ def loads(adi: str) -> dict:
            'RECORDS': []
            }
 
-    record_data = adi
-    if not adi.startswith('<'):
-        hr_list = re.split(r'<[eE][oO][hH]>', adi)
-        if len(hr_list) > 2:
-            raise TooMuchHeadersException()
-
-        doc['HEADER'] = unpack(hr_list[0])
-        record_data = hr_list[1]
-
-    rec_list = re.split(r'<[eE][oO][rR]>', record_data)
-    for rec in rec_list:
-        if rec.strip():
-            doc['RECORDS'].append(unpack(rec))
+    first = True
+    for rec in loadi(adi, skip):
+        if first:
+            doc['HEADER'] = rec
+            first = False
+        else:
+            doc['RECORDS'].append(rec)
 
     return doc
 
 
-def load(file_name: str):
-    """Turn ADI formated string to dictionary
+def load(file_name: str, skip: int = 0) -> dict:
+    """Load ADI formated file to dictionary
        The parameters are converted to uppercase
 
            {
@@ -122,14 +147,18 @@ def load(file_name: str):
            'RECORDS': [list of records]
            }
 
+       The skip option is useful if you want to watch a file for new records only. This saves processing time.
+       In this case consider to use loadi() directly.
+
        :param file_name: the file name where the ADI data is stored
+       :param skip: skip first number of records (does not apply for header)
        :return: the ADI as a dict
        """
 
     with open(file_name, encoding='ascii') as af:
         data = af.read()
 
-    return loads(data)
+    return loads(data, skip)
 
 
 def pack(param: str, value: str, dtype: str = None) -> str:
@@ -257,7 +286,7 @@ def dump(file_name: str, data_dict: dict, comment: str = 'ADIF export by ' + __p
             af.write(chunk)
 
 
-__all__ = ['load', 'loads', 'dump', 'dumps',
+__all__ = ['load', 'loads', 'loadi', 'dump', 'dumps', 'dumpi',
            'TooMuchHeadersException', 'TagDefinitionException',
            'IllegalDataTypeException', 'IllegalParameterException',
            'StringNotASCIIException']
