@@ -4,9 +4,10 @@ dynamic = ["version"]
 authors = [
   { name="Andreas Schawo", email="andreas@schawo.de" },
 ]
-description = "Convert ADIF ADI content to dictionary and vice versa"
+description = "Convert ADIF ADI/ADX content to dictionary and vice versa"
 readme = "README.md"
 requires-python = ">=3.9"
+dependencies = ["xmlschema"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Other Audience",
@@ -23,6 +24,10 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/gitandy/PyADIF-File"
 "Bug Tracker" = "https://github.com/gitandy/PyADIF-File/issues"
+
+
+[tool.setuptools.package-data]
+adif_file = ["xsd/**"]
 
 [tool.setuptools.dynamic]
 version = {attr = "adif_file.__version__"}

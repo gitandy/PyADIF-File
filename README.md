@@ -8,7 +8,7 @@ PyADIF-File
 
 Convert [ADIF](https://adif.org/) ADI content (ham radio QSO logs) to dictionary and vice versa
 
-The required/resulting dictionary format is
+The required/resulting dictionary format for ADI is
 
     {
         'HEADER': 
@@ -17,18 +17,22 @@ The required/resulting dictionary format is
         'RECORDS': [list of records]
     }
 
-The header or each record is/must be a dictionary in the format
+For ADI the header or each record is/must be a dictionary in the format
     
     {
         ADIF parameter name: Text value,
     }
 
-A user definition is a dictionary of
+For ADI a user definition is a dictionary of
     
     {
         'dtype': one char representing the type,
         'userdef': the field definition text
     }
+
+The library also supports ADX import/export as compatible as possible to the ADI part. 
+Though it will differ in handling application and user definitions.
+It relys on the [ADX schemas](https://adif.org/314/ADIF_314.htm#ADX_Schemas) from adif.org.
 
 Installation
 ------------
