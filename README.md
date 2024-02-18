@@ -39,15 +39,15 @@ The package is available via [PyPI](https://pypi.org/project/PyADIF-File/)
 Usage
 -----
 
-For reading and writing files you can use load_adi or dump_adi.
-There is a corresponding variant for handling string: loads_adi and dumps_adi.
+For reading and writing files you can use adi.load or adi.dump.
+There is a corresponding variant for handling string: adi.loads and adi.dumps.
 
 Here is an example for reading an ADI file:
 
-    import adif_file as af
+    from adif_file import adi
 
-    adi = af.load_adi('qsos.adi')
-    for rec in adi['RECORDS']:
+    adi_doc = adi.load('qsos.adi')
+    for rec in adi_doc['RECORDS']:
         if "CALL" in rec:
             print(f'QSO on {rec["QSO_DATE"]} at {rec["TIME_ON"]} with {rec["CALL"]}')
 
