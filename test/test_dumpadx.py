@@ -48,7 +48,14 @@ class DumpADX(unittest.TestCase):
                         {'CALL': 'YY1YYY',
                          'QSO_DATE': '20231204',
                          'TIME_ON': '1200',
-                         'QTH_INTL': 'Töst'
+                         'QTH_INTL': 'Töst',
+                         'APP':
+                             {
+                                 '@PROGRAMID': 'TESTAPP',
+                                 '@FIELDNAME': 'TESTFIELD',
+                                 '@TYPE': 'I',
+                                 '$': 'Test',
+                             },
                          }]
         }
 
@@ -72,6 +79,7 @@ class DumpADX(unittest.TestCase):
             <QSO_DATE>20231204</QSO_DATE>
             <TIME_ON>1200</TIME_ON>
             <QTH_INTL>Töst</QTH_INTL>
+            <APP PROGRAMID="TESTAPP" FIELDNAME="TESTFIELD" TYPE="I">Test</APP>
         </RECORD>
     </RECORDS>
 </ADX>

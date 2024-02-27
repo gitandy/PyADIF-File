@@ -1,1 +1,2 @@
-xmlschema
+xmlschema~=2.5.0
+xmltodict~=0.13.0

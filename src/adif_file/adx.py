@@ -3,9 +3,11 @@ The XML is validated against the XSD from ADIF.org"""
 
 import datetime
 import os.path
+import xml
 from xml.etree.ElementTree import ElementTree, ParseError
 
 import xmlschema
+import xmltodict
 
 from adif_file.__version__ import __version__ as __version_str__
 
@@ -32,40 +34,51 @@ class XmlSyntaxError(SyntaxError):
     pass
 
 
-def load(file_name: str) -> dict:
+def loads(adx_data: str, validate: bool = False) -> dict:
+    """Load ADX content to dictionary
+       The ADX is not validated to conform to the standard
+
+       :param adx_data: the ADX content
+       :param validate: validate the ADX against the genereic XSD (very slow)
+       :return: the ADX as a dict
+       """
+
+    if validate:
+        try:
+            ADX_IMPORT_SCHEMA.validate(adx_data)
+        except ParseError as exc:
+            raise XmlSyntaxError(str(exc)) from None
+        except xmlschema.validators.exceptions.XMLSchemaChildrenValidationError as exc:
+            raise UndefinedElementException(f'in {exc.elem.tag}') from None
+        except xmlschema.validators.exceptions.XMLSchemaValidationError as exc:
+            raise MalformedValueException(f'Field "{exc.elem.tag}": {exc.reason}') from None
+
+    try:
+        data_dict = xmltodict.parse(adx_data, cdata_key='$')
+        data_dict = data_dict['ADX']
+        if ('RECORDS' in data_dict and data_dict['RECORDS'] and
+                'RECORD' in data_dict['RECORDS'] and data_dict['RECORDS']['RECORD']):
+            data_dict['RECORDS'] = data_dict['RECORDS']['RECORD']
+        else:
+            data_dict['RECORDS'] = []
+        return data_dict
+    except xml.parsers.expat.ExpatError as exc:
+        raise XmlSyntaxError(str(exc)) from None
+
+
+def load(file_name: str, validate: bool = False) -> dict:
     """Load ADX file to dictionary
        The XML is validated against the generic XSD
 
        :param file_name: the file name where the ADX data is stored
+       :param validate: validate the ADX against the genereic XSD (very slow)
        :return: the ADX as a dict
        """
 
-    try:
-        data_dict = ADX_IMPORT_SCHEMA.to_dict(file_name, decimal_type=str)
+    with open(file_name, encoding='utf-8') as xf:
+        adx_data = xf.read()
 
-        # Flatten records
-        records = []
-        for rec in data_dict['RECORDS']['RECORD']:
-            for elem in rec:
-                if type(rec[elem][0]) is str:  # Only for str to save APP data
-                    rec[elem] = rec[elem][0]
-            records.append(rec)
-        data_dict['RECORDS'] = records
-
-        # Flatten header
-        header = {}
-        for elem in data_dict['HEADER']:
-            if type(data_dict['HEADER'][elem][0]) is str:  # Only for str to save USERDEF
-                header[elem] = data_dict['HEADER'][elem][0]
-        data_dict['HEADER'] = header
-    except ParseError as exc:
-        raise XmlSyntaxError(str(exc)) from None
-    except xmlschema.validators.exceptions.XMLSchemaChildrenValidationError as exc:
-        raise UndefinedElementException(f'in {exc.elem.tag}') from None
-    except xmlschema.validators.exceptions.XMLSchemaValidationError as exc:
-        raise MalformedValueException(f'Field "{exc.elem.tag}": {exc.reason}') from None
-
-    return data_dict
+    return loads(adx_data, validate)
 
 
 def dump(file_name: str, data_dict: dict):
@@ -106,5 +119,5 @@ def dump(file_name: str, data_dict: dict):
         raise MalformedValueException(f'Field "{exc.elem.tag}": {exc.reason}') from None
 
 
-__all__ = ['load', 'dump', 'MissingRecordsException', 'UndefinedElementException',
+__all__ = ['load', 'loads', 'dump', 'MissingRecordsException', 'UndefinedElementException',
            'MalformedValueException', 'XmlSyntaxError']

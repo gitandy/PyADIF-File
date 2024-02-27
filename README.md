@@ -33,6 +33,7 @@ For ADI a user definition is a dictionary of
 The library also supports ADX import/export as compatible as possible to the ADI part. 
 Though it will differ in handling application and user definitions.
 It relys on the [ADX schemas](https://adif.org/314/ADIF_314.htm#ADX_Schemas) from adif.org.
+For the ADX import there is no validation by default to be able to read fast.
 
 Installation
 ------------
@@ -80,4 +81,7 @@ Copyright
 ---------
 PyADIF-File &copy; 2024 by Andreas Schawo is licensed under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/) 
 
-PyADIF-File uses xmlschema Copyright (c), 2016-2022, SISSA (Scuola Internazionale Superiore di Studi Avanzati).
+PyADIF-File uses
+* xmlschema Copyright (c), 2016-2022, SISSA (Scuola Internazionale Superiore di Studi Avanzati)
+* xmltodict Copyright (c), 2012 Martin Blech and individual contributors
+

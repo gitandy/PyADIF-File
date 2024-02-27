@@ -23,10 +23,18 @@ class LoadADX(unittest.TestCase):
                         {'CALL': 'YY1YYY',
                          'QSO_DATE': '20231204',
                          'TIME_ON': '1200',
-                         'QTH_INTL': 'Töst'
+                         'QTH_INTL': 'Töst',
+                         'APP':
+                             {
+                                 '@PROGRAMID': 'TESTAPP',
+                                 '@FIELDNAME': 'TESTFIELD',
+                                 '@TYPE': 'I',
+                                 '$': 'Test',
+                             },
                          }]
         }
 
+        self.maxDiff = None
         self.assertDictEqual(adx_exp_dict, adif_file.adx.load(get_file_path('testdata/goodfile.adx')))
 
     def test_20_badfile(self):
@@ -35,9 +43,9 @@ class LoadADX(unittest.TestCase):
 
     def test_20_badxml(self):
         self.assertRaises(adif_file.adx.MalformedValueException, adif_file.adx.load,
-                          get_file_path('testdata/badfile1.adx'))
+                          get_file_path('testdata/badfile1.adx'), True)
         self.assertRaises(adif_file.adx.UndefinedElementException, adif_file.adx.load,
-                          get_file_path('testdata/badfile2.adx'))
+                          get_file_path('testdata/badfile2.adx'), True)
 
 
 if __name__ == '__main__':
