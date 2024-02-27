@@ -19,14 +19,14 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Fake the version file
       run: |
         echo "__version__ = '0.1'" > src/adif_file/__version__.py
         echo "__branch__ = ''" >> src/adif_file/__version__.py
         echo "__unclean__ = False" >> src/adif_file/__version__.py
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
