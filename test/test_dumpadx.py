@@ -93,6 +93,66 @@ class DumpADX(unittest.TestCase):
 
         os.remove(temp_file)
 
+    def test_30_dump_no_change(self):
+        adx_dict = {
+            'HEADER': {'PROGRAMVERSION': '1',
+                       'CREATED_TIMESTAMP': '20231204 100000',
+                       },
+            'RECORDS': [{'CALL': 'XX1XXX',
+                         'QSO_DATE': '20231204',
+                         'TIME_ON': '1100',
+                         'QTH': 'Test'
+                         },
+                        {'CALL': 'YY1YYY',
+                         'QSO_DATE': '20231204',
+                         'TIME_ON': '1200',
+                         'QTH_INTL': 'Töst',
+                         'APP':
+                             {
+                                 '@PROGRAMID': 'TESTAPP',
+                                 '@FIELDNAME': 'TESTFIELD',
+                                 '@TYPE': 'I',
+                                 '$': 'Test',
+                             },
+                         }]
+        }
+        adx_dict_sav = adx_dict.copy()
+
+        adx_expected = '''<?xml version='1.0' encoding='utf-8'?>
+<ADX>
+    <HEADER>
+        <PROGRAMVERSION>1</PROGRAMVERSION>
+        <CREATED_TIMESTAMP>20231204 100000</CREATED_TIMESTAMP>
+        <ADIF_VER>3.1.4</ADIF_VER>
+        <PROGRAMID>PyADIF-File</PROGRAMID>
+    </HEADER>
+    <RECORDS>
+        <RECORD>
+            <CALL>XX1XXX</CALL>
+            <QSO_DATE>20231204</QSO_DATE>
+            <TIME_ON>1100</TIME_ON>
+            <QTH>Test</QTH>
+        </RECORD>
+        <RECORD>
+            <CALL>YY1YYY</CALL>
+            <QSO_DATE>20231204</QSO_DATE>
+            <TIME_ON>1200</TIME_ON>
+            <QTH_INTL>Töst</QTH_INTL>
+            <APP PROGRAMID="TESTAPP" FIELDNAME="TESTFIELD" TYPE="I">Test</APP>
+        </RECORD>
+    </RECORDS>
+</ADX>
+'''
+
+        temp_file = get_file_path('testdata/~test.adx')
+        adif_file.adx.dump(temp_file, adx_dict)
+        self.assertDictEqual(adx_dict_sav, adx_dict)
+
+        with open(temp_file, encoding='utf-8') as af:
+            self.assertEqual(adx_expected, af.read())
+
+        os.remove(temp_file)
+
 
 if __name__ == '__main__':
     unittest.main()

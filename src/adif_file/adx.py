@@ -90,6 +90,8 @@ def dump(file_name: str, data_dict: dict):
        :param data_dict: the dictionary with header and records
        """
 
+    data_dict = data_dict.copy()
+
     header = {
         'ADIF_VER': '3.1.4',
         'PROGRAMID': __proj_name__,
