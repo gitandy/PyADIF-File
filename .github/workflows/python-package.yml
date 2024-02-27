@@ -15,17 +15,17 @@ jobs:
         python-version: ["3.11"]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Get git version
       id: version
-      uses: proudust/gh-describe@v1.5.3
+      uses: proudust/gh-describe@v2
     - name: Build version module
       run: |
         echo "__version__ = '${{ steps.version.outputs.describe }}'" > src/adif_file/__version__.py
         echo "__branch__ = ''" >> src/adif_file/__version__.py
         echo "__unclean__ = False" >> src/adif_file/__version__.py
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -46,7 +46,7 @@ jobs:
       run: |
         python -m build
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dist_files-${{ steps.version.outputs.describe }}-Py${{ matrix.python-version }}
         path: ${{ github.workspace }}/dist/*
