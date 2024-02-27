@@ -219,7 +219,7 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> 
             elif p.upper() == 'USERDEFS':
                 for i, u in enumerate(data_dict['HEADER'][p], 1):
                     data += pack(f'USERDEF{i}', u['userdef'], u['dtype']) + '\n'
-        for p in default.items():
+        for p in default:
             data += pack(p, default[p]) + '\n'
         data += '<EOH>'
         yield data
