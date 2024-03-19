@@ -5,6 +5,8 @@ PyADIF-File
 [![Test & Lint](https://github.com/gitandy/PyADIF-File/actions/workflows/python-test.yml/badge.svg)](https://github.com/gitandy/PyADIF-File/actions/workflows/python-test.yml)
 [![Python versions](https://img.shields.io/pypi/pyversions/pyadif_file.svg?color=%2334D058&label=Python)](https://pypi.org/project/pyadif_file)
 
+Author: Andreas Schawo, DF1ASC 
+([HamQTH](http://www.hamqth.com/DF1ASC), [eQSL](http://www.eqsl.cc/Member.cfm?DF1ASC))
 
 Convert [ADIF](https://adif.org/) ADI content (ham radio QSO logs) to dictionary and vice versa
 
@@ -79,7 +81,7 @@ The source code is available at [GitHub](https://github.com/gitandy/PyADIF-File)
 
 Copyright
 ---------
-PyADIF-File &copy; 2024 by Andreas Schawo is licensed under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/) 
+PyADIF-File &copy; 2023-2024 by Andreas Schawo is licensed under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/) 
 
 PyADIF-File uses
 * xmlschema Copyright (c), 2016-2022, SISSA (Scuola Internazionale Superiore di Studi Avanzati)

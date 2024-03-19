@@ -2,7 +2,7 @@
 
 from adif_file.__version__ import __version__ as __version_str__
 
-__author_name__ = 'Andreas Schawo'
+__author_name__ = 'Andreas Schawo, DF1ASC'
 __author_email__ = 'andreas@schawo.de'
 __copyright__ = 'Copyright 2023 by Andreas Schawo,licensed under CC BY-SA 4.0'
 __proj_name__ = 'PyADIF-File'
