@@ -188,7 +188,8 @@ def pack(param: str, value: str, dtype: str = None) -> str:
         return ''
 
 
-def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> Iterator[str]:
+def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__,
+          linebreaks: bool = True, spaces: int = 1) -> Iterator[str]:
     """Takes a dictionary and converts it to ADI format
     Parameters can be in upper or lower case. The output is upper case. The user must take care
     that parameters are not doubled!
@@ -201,6 +202,8 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> 
 
     :param data_dict: the dictionary with header and records
     :param comment: the comment to induce the header
+    :param linebreaks: Format output with additional linebreaks for readability
+    :param spaces: Number of spaces between fields
     :return: an iterator of chunks of the ADI"""
 
     default = {'ADIF_VER': '3.1.4',
@@ -209,18 +212,20 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> 
                'CREATED_TIMESTAMP': datetime.datetime.utcnow().strftime('%Y%m%d %H%M%S')
                }
 
+    field_separator = ' ' * spaces if spaces >= 0 else ' '
+
     if 'HEADER' in data_dict:
         data = comment + ' \n'
 
         for p in data_dict['HEADER']:
             if p.upper() in ('ADIF_VER', 'PROGRAMID', 'PROGRAMVERSION', 'CREATED_TIMESTAMP'):
-                data += pack(p.upper(), data_dict['HEADER'][p]) + '\n'
+                data += pack(p.upper(), data_dict['HEADER'][p]) + ('\n' if linebreaks else field_separator)
                 default.pop(p.upper())
             elif p.upper() == 'USERDEFS':
                 for i, u in enumerate(data_dict['HEADER'][p], 1):
-                    data += pack(f'USERDEF{i}', u['userdef'], u['dtype']) + '\n'
+                    data += pack(f'USERDEF{i}', u['userdef'], u['dtype']) + ('\n' if linebreaks else field_separator)
         for p in default:
-            data += pack(p, default[p]) + '\n'
+            data += pack(p, default[p]) + ('\n' if linebreaks else field_separator)
         data += '<EOH>'
         yield data
 
@@ -232,16 +237,19 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> 
                 tag = pack(pv[0].upper(), pv[1])
                 if tag:
                     empty = False
-                    data += tag + ('\n' if i % 5 == 0 else ' ')
+                    if linebreaks:
+                        data += tag + ('\n' if i % 5 == 0 else field_separator)
+                    else:
+                        data += tag + field_separator
             if not data.endswith('\n'):
-                data += '\n'
+                data += '\n' if linebreaks else ''
 
             if not empty:
                 data += '<EOR>'
                 yield data
 
 
-def dumps(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> str:
+def dumps(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__, linebreaks: bool = True, **params) -> str:
     """Takes a dictionary and converts it to ADI format
     Parameters can be in upper or lower case. The output is upper case. The user must take care
     that parameters are not doubled!
@@ -254,12 +262,16 @@ def dumps(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__) -> 
 
     :param data_dict: the dictionary with header and records
     :param comment: the comment to induce the header
+    :param linebreaks: Format output with additional linebreaks for readability
     :return: the complete ADI as a string"""
 
-    return '\n\n'.join(list(dumpi(data_dict, comment)))
+    line_separator = '\n\n' if linebreaks else '\n'
+
+    return line_separator.join(list(dumpi(data_dict, comment, linebreaks=linebreaks, **params)))
 
 
-def dump(file_name: str, data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__):
+def dump(file_name: str, data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__,
+         linebreaks: bool = True, **params):
     """Takes a dictionary and stores it to filename in ADI format
     Parameters can be in upper or lower case. The output is upper case. The user must take care
     that parameters are not doubled!
@@ -273,15 +285,16 @@ def dump(file_name: str, data_dict: dict, comment: str = 'ADIF export by ' + __p
     :param file_name: the filename to store the ADI data to
     :param data_dict: the dictionary with header and records
     :param comment: the comment to induce the header
+    :param linebreaks: Format output with additional linebreaks for readability
     :return: the complete ADI as a string"""
 
     with open(file_name, 'w', encoding='ascii') as af:
         first = True
-        for chunk in dumpi(data_dict, comment):
+        for chunk in dumpi(data_dict, comment, linebreaks=linebreaks, **params):
             if first:
                 first = False
             else:
-                af.write('\n\n')
+                af.write('\n\n' if linebreaks else '\n')
 
             af.write(chunk)
 
