@@ -117,7 +117,7 @@ class LoadADI(unittest.TestCase):
         self.assertEqual('Jörg', adi_dict['RECORDS'][4]['NAME'])
 
     def test_81_latin1file(self):
-        adi_dict = adif_file.adi.load(get_file_path('testdata/latin1file.txt'))
+        adi_dict = adif_file.adi.load(get_file_path('testdata/latin1file.txt'), encoding='latin1')
 
         self.assertIn('HEADER', adi_dict)
         self.assertIn('RECORDS', adi_dict)
