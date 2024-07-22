@@ -107,6 +107,24 @@ class LoadADI(unittest.TestCase):
         for exp, rec in zip(rec_list, adif_file.adi.loadi(adi_txt, 2)):
             self.assertDictEqual(exp, rec)
 
+    def test_80_utf8file(self):
+        adi_dict = adif_file.adi.load(get_file_path('testdata/utf8file.txt'), encoding='utf8')
+
+        self.assertIn('HEADER', adi_dict)
+        self.assertIn('RECORDS', adi_dict)
+        self.assertEqual(3, len(adi_dict['HEADER']))
+        self.assertEqual(5, len(adi_dict['RECORDS']))
+        self.assertEqual('Jörg', adi_dict['RECORDS'][4]['NAME'])
+
+    def test_81_latin1file(self):
+        adi_dict = adif_file.adi.load(get_file_path('testdata/latin1file.txt'))
+
+        self.assertIn('HEADER', adi_dict)
+        self.assertIn('RECORDS', adi_dict)
+        self.assertEqual(3, len(adi_dict['HEADER']))
+        self.assertEqual(5, len(adi_dict['RECORDS']))
+        self.assertEqual('Jörg', adi_dict['RECORDS'][4]['NAME'])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -138,7 +138,7 @@ def loads(adi: str, skip: int = 0) -> dict:
     return doc
 
 
-def load(file_name: str, skip: int = 0) -> dict:
+def load(file_name: str, skip: int = 0, encoding=None) -> dict:
     """Load ADI formated file to dictionary
        The parameters are converted to uppercase
 
@@ -152,10 +152,11 @@ def load(file_name: str, skip: int = 0) -> dict:
 
        :param file_name: the file name where the ADI data is stored
        :param skip: skip first number of records (does not apply for header)
+       :param encoding: the file encoding
        :return: the ADI as a dict
        """
 
-    with open(file_name, encoding='ascii') as af:
+    with open(file_name, encoding=encoding) as af:
         data = af.read()
 
     return loads(data, skip)
@@ -271,7 +272,7 @@ def dumps(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__, lin
 
 
 def dump(file_name: str, data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__,
-         linebreaks: bool = True, **params):
+         linebreaks: bool = True, encoding='ascii', **params):
     """Takes a dictionary and stores it to filename in ADI format
     Parameters can be in upper or lower case. The output is upper case. The user must take care
     that parameters are not doubled!
@@ -285,10 +286,11 @@ def dump(file_name: str, data_dict: dict, comment: str = 'ADIF export by ' + __p
     :param file_name: the filename to store the ADI data to
     :param data_dict: the dictionary with header and records
     :param comment: the comment to induce the header
-    :param linebreaks: Format output with additional linebreaks for readability
+    :param linebreaks: format output with additional linebreaks for readability
+    :param encoding: the file encoding
     :return: the complete ADI as a string"""
 
-    with open(file_name, 'w', encoding='ascii') as af:
+    with open(file_name, 'w', encoding=encoding) as af:
         first = True
         for chunk in dumpi(data_dict, comment, linebreaks=linebreaks, **params):
             if first:
