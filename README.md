@@ -8,7 +8,7 @@ PyADIF-File
 Author: Andreas Schawo, DF1ASC 
 ([HamQTH](http://www.hamqth.com/DF1ASC), [eQSL](http://www.eqsl.cc/Member.cfm?DF1ASC))
 
-Convert [ADIF](https://adif.org/) ADI content (ham radio QSO logs) to dictionary and vice versa
+Convert [ADIF](https://adif.org/) ADI or ADX content (ham radio QSO logs) to dictionary and vice versa.
 
 The required/resulting dictionary format for ADI is
 
@@ -34,7 +34,7 @@ For ADI a user definition is a dictionary of
 
 The library also supports ADX import/export as compatible as possible to the ADI part. 
 Though it will differ in handling application and user definitions.
-It relys on the [ADX schemas](https://adif.org/314/ADIF_314.htm#ADX_Schemas) from adif.org.
+It relies on the [ADX schemas](https://adif.org/314/ADIF_314.htm#ADX_Schemas) from adif.org.
 For the ADX import there is no validation by default to be able to read fast.
 
 Installation
@@ -65,6 +65,12 @@ Here is an example for reading an ADI file:
     QSO on 20231010 at 1148 with HB4FDS
 
 
+The example.txt contains a dictionary to generate example.adi or vice versa (run example.py).
+
+The ADI module now also provides a content validation for valid ADIF tags derived from the XML spec for ADX.
+When importing you may want to be forgiving and omit validation. 
+But when exporting strictly stick to the standard and enable validation will help others to work with your files.
+
 ### Exporting ADI
 
 If an empty header is provided, the fields are generated with suiting defaults.
@@ -74,6 +80,13 @@ Empty record fields and empty records are not exported at all.
 
 *_INTL fields are not exported (see ADIF specification).
 If non ASCII characters are used the API raises an Exception.
+
+### File encoding
+
+On ADI import PyADIF-File uses local enconding as default which also suits ASCII content.
+On ADI export ASCII is the default.
+
+For import and export one can choose other encodings while this is discouraged and does not conform to the standard.
 
 Source Code
 -----------
