@@ -10,19 +10,30 @@ def get_file_path(file):
 
 class DumpADI(unittest.TestCase):
     def test_10_pack_header_tag(self):
-        self.assertEqual('<PROGRAMID:8>Testprog', adif_file.adi.pack('PROGRAMID', 'Testprog'))
-        self.assertEqual('<USERDEF1:4:N>Test', adif_file.adi.pack('USERDEF1', 'Test', 'N'))
+        self.assertEqual('<PROGRAMID:8>Testprog', adif_file.adi.pack('PROGRAMID', 'Testprog', validate=False))
+        self.assertEqual('<USERDEF1:4:N>Test', adif_file.adi.pack('USERDEF1', 'Test', 'N', validate=False))
         self.assertEqual('<USERDEF1:19:E>SweaterSize,{S,M,L}',
-                         adif_file.adi.pack('USERDEF1', 'SweaterSize,{S,M,L}', 'E'))
+                         adif_file.adi.pack('USERDEF1', 'SweaterSize,{S,M,L}', 'E', validate=False))
 
-        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'X')
-        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'NN')
+        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'X', False)
+        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'NN', False)
+
+    def test_12_pack_header_validate(self):
+        self.assertEqual('<PROGRAMID:8>Testprog', adif_file.adi.pack('PROGRAMID', 'Testprog', validate=True, header=True))
+        self.assertEqual('<USERDEF1:4:N>Test', adif_file.adi.pack('USERDEF1', 'Test', 'N', validate=True, header=True))
+        self.assertEqual('<USERDEF1:19:E>SweaterSize,{S,M,L}',
+                         adif_file.adi.pack('USERDEF1', 'SweaterSize,{S,M,L}', 'E', validate=True, header=True))
+
+        self.assertRaises(adif_file.adi.IllegalFieldNameException,
+                          adif_file.adi.pack, 'XXXXX', 'Undef', None, True, True)
+        self.assertRaises(adif_file.adi.IllegalFieldNameException,
+                          adif_file.adi.pack, 'USERDEF2', 'Name', 'S', True, True)
 
     def test_15_pack_record_tag(self):
         self.assertEqual('<NAME:5>Joerg', adif_file.adi.pack('NAME', 'Joerg'))
         self.assertEqual('<NAME:5>Joerg', adif_file.adi.pack('name', 'Joerg'))
         self.assertEqual('<NAME:5>Joerg', adif_file.adi.pack('Name', 'Joerg'))
-        self.assertEqual('', adif_file.adi.pack('name_intl', 'Joerg'))
+        self.assertEqual('', adif_file.adi.pack('name_intl', 'Joerg', validate=False))
         self.assertEqual('<APP_TESTAPP_CHANNEL:2:N>24', adif_file.adi.pack('APP_TESTAPP_CHANNEL', 24, dtype='N'))
 
         self.assertEqual('<MY_NAME:5>Peter', adif_file.adi.pack('MY_Name', 'Peter'))
@@ -32,10 +43,24 @@ class DumpADI(unittest.TestCase):
         self.assertRaises(adif_file.adi.IllegalParameterException, adif_file.adi.pack, 'MY_ NAME', 'Peter')
         self.assertRaises(adif_file.adi.IllegalParameterException, adif_file.adi.pack, 'MY~NAME', 'Peter')
 
-        # noinspection PyTypeChecker
-        self.assertEqual('<DIST:2>99', adif_file.adi.pack('DIST', 99))
-        # noinspection PyTypeChecker
+        # noinspection PyTypevalidateer
+        self.assertEqual('<DISTANCE:2>99', adif_file.adi.pack('DISTANCE', 99))
+        # noinspection PyTypevalidateer
         self.assertEqual('<FREQ:5>0.138', adif_file.adi.pack('freq', 0.138))
+
+    def test_17_pack_record_validate(self):
+        self.assertEqual('<NAME:5>Joerg', adif_file.adi.pack('NAME', 'Joerg', validate=True))
+        self.assertEqual('<NAME:5>Joerg', adif_file.adi.pack('name', 'Joerg', validate=True))
+        self.assertEqual('<NAME:5>Joerg', adif_file.adi.pack('Name', 'Joerg', validate=True))
+        self.assertEqual('<APP_TESTAPP_CHANNEL:2:N>24',
+                         adif_file.adi.pack('APP_TESTAPP_CHANNEL', 24, dtype='N', validate=True))
+
+        self.assertEqual('<MY_NAME:5>Peter', adif_file.adi.pack('MY_Name', 'Peter', validate=True))
+
+        self.assertRaises(adif_file.adi.IllegalFieldNameException, adif_file.adi.pack, 'XXXXX', 'Undef', None, True)
+
+        self.assertEqual('<XXXXX:7>Userdef',
+                         adif_file.adi.pack('XXxXX', 'Userdef', validate=True, userdefs=['XXXXX']))
 
     def test_20_dump_header(self):
         adi_dict = {
@@ -93,18 +118,20 @@ class DumpADI(unittest.TestCase):
 <TEST1:5>test3 <TEST2:12>test4\r\ntest5 
 <EOR>'''
 
-        self.assertEqual(adi_exp, adif_file.adi.dumps(adi_dict))
+        self.assertEqual(adi_exp, adif_file.adi.dumps(adi_dict, validate=False))
 
     def test_30_dump_a_file(self):
         adi_dict = {
             'HEADER': {'PROGRAMID': 'TProg',
                        'ADIF_VER': '3',
                        'PROGRAMVERSION': '1',
-                       'CREATED_TIMESTAMP': '1234'},
-            'RECORDS': [{'TEST1': 'test',
-                         'TEST2': 'test2'},
-                        {'TEST1': 'test3',
-                         'TEST2': 'test4'}]
+                       'CREATED_TIMESTAMP': '1234',
+                       'USERDEFS': [{'userdef': 'Test', 'dtype': 'N'}]},
+            'RECORDS': [{'Name': 'test',
+                         'qth': 'test2'},
+                        {'name': 'test3',
+                         'QTH': 'test4',
+                         'test': 'userdef'}]
         }
 
         adi_exp = '''ADIF export by PyADIF-File 
@@ -112,17 +139,18 @@ class DumpADI(unittest.TestCase):
 <ADIF_VER:1>3
 <PROGRAMVERSION:1>1
 <CREATED_TIMESTAMP:4>1234
+<USERDEF1:4:N>Test
 <EOH>
 
-<TEST1:4>test <TEST2:5>test2 
+<NAME:4>test <QTH:5>test2 
 <EOR>
 
-<TEST1:5>test3 <TEST2:5>test4 
+<NAME:5>test3 <QTH:5>test4 <TEST:7>userdef 
 <EOR>'''
 
         temp_file = get_file_path('testdata/~test.adi')
 
-        adif_file.adi.dump(temp_file, adi_dict)
+        adif_file.adi.dump(temp_file, adi_dict, validate=True)
 
         self.assertTrue(os.path.isfile(temp_file))
 
@@ -150,7 +178,7 @@ class DumpADI(unittest.TestCase):
 
             temp_file = get_file_path('testdata/~test.adi')
 
-            adif_file.adi.dump(temp_file, adi_dict, linebreaks=False, spaces=2)
+            adif_file.adi.dump(temp_file, adi_dict, linebreaks=False, spaces=2, validate=False)
 
             self.assertTrue(os.path.isfile(temp_file))
 
@@ -186,7 +214,7 @@ class DumpADI(unittest.TestCase):
 
         temp_file = get_file_path('testdata/~test.adi')
 
-        adif_file.adi.dump(temp_file, adi_dict)
+        adif_file.adi.dump(temp_file, adi_dict, validate=False)
         self.assertDictEqual(adi_dict_sav, adi_dict)
 
         self.assertTrue(os.path.isfile(temp_file))
