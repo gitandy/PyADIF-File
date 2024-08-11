@@ -15,11 +15,14 @@ class DumpADI(unittest.TestCase):
         self.assertEqual('<USERDEF1:19:E>SweaterSize,{S,M,L}',
                          adif_file.adi.pack('USERDEF1', 'SweaterSize,{S,M,L}', 'E', validate=False))
 
-        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'X', False)
-        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'NN', False)
+        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}',
+                          'X', False)
+        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}',
+                          'NN', False)
 
     def test_12_pack_header_validate(self):
-        self.assertEqual('<PROGRAMID:8>Testprog', adif_file.adi.pack('PROGRAMID', 'Testprog', validate=True, header=True))
+        self.assertEqual('<PROGRAMID:8>Testprog',
+                         adif_file.adi.pack('PROGRAMID', 'Testprog', validate=True, header=True))
         self.assertEqual('<USERDEF1:4:N>Test', adif_file.adi.pack('USERDEF1', 'Test', 'N', validate=True, header=True))
         self.assertEqual('<USERDEF1:19:E>SweaterSize,{S,M,L}',
                          adif_file.adi.pack('USERDEF1', 'SweaterSize,{S,M,L}', 'E', validate=True, header=True))
@@ -160,32 +163,32 @@ class DumpADI(unittest.TestCase):
         os.remove(temp_file)
 
     def test_31_dump_a_file_ln_sp(self):
-            adi_dict = {
-                'HEADER': {'PROGRAMID': 'TProg',
-                           'ADIF_VER': '3',
-                           'PROGRAMVERSION': '1',
-                           'CREATED_TIMESTAMP': '1234'},
-                'RECORDS': [{'TEST1': 'test',
-                             'TEST2': 'test2'},
-                            {'TEST1': 'test3',
-                             'TEST2': 'test4'}]
-            }
+        adi_dict = {
+            'HEADER': {'PROGRAMID': 'TProg',
+                       'ADIF_VER': '3',
+                       'PROGRAMVERSION': '1',
+                       'CREATED_TIMESTAMP': '1234'},
+            'RECORDS': [{'TEST1': 'test',
+                         'TEST2': 'test2'},
+                        {'TEST1': 'test3',
+                         'TEST2': 'test4'}]
+        }
 
-            adi_exp = '''ADIF export by PyADIF-File 
+        adi_exp = '''ADIF export by PyADIF-File 
 <PROGRAMID:5>TProg  <ADIF_VER:1>3  <PROGRAMVERSION:1>1  <CREATED_TIMESTAMP:4>1234  <EOH>
 <TEST1:4>test  <TEST2:5>test2  <EOR>
 <TEST1:5>test3  <TEST2:5>test4  <EOR>'''
 
-            temp_file = get_file_path('testdata/~test.adi')
+        temp_file = get_file_path('testdata/~test.adi')
 
-            adif_file.adi.dump(temp_file, adi_dict, linebreaks=False, spaces=2, validate=False)
+        adif_file.adi.dump(temp_file, adi_dict, linebreaks=False, spaces=2, validate=False)
 
-            self.assertTrue(os.path.isfile(temp_file))
+        self.assertTrue(os.path.isfile(temp_file))
 
-            with open(temp_file) as af:
-                self.assertEqual(adi_exp, af.read())
+        with open(temp_file) as af:
+            self.assertEqual(adi_exp, af.read())
 
-            os.remove(temp_file)
+        os.remove(temp_file)
 
     def test_40_dump_no_change(self):
         adi_dict = {
