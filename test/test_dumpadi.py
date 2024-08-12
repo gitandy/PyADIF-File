@@ -72,6 +72,14 @@ class DumpADI(unittest.TestCase):
         adi_dict['HEADER']['USERDEFS'] = adi_udef
         self.assertEqual(exp_hdr_udef, adif_file.adi.dumps(adi_dict))
 
+    def test_22_dump_header_defaults(self):
+        adif_doc = adif_file.adi.dumps({'HEADER': {}})
+
+        self.assertIn('<ADIF_VER:5>3.1.4', adif_doc)
+        self.assertIn('<PROGRAMID:11>PyADIF-File', adif_doc)
+        self.assertIn('<PROGRAMVERSION:', adif_doc)
+        self.assertIn('<CREATED_TIMESTAMP:', adif_doc)
+
     def test_25_dump_records(self):
         adi_dict = {
             'RECORDS': [{'TEST1': 'test',
