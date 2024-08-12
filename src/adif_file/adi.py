@@ -205,17 +205,18 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__,
     :param comment: the comment to induce the header
     :param linebreaks: Format output with additional linebreaks for readability
     :param spaces: Number of spaces between fields
-    :return: an iterator of chunks of the ADI"""
-
-    default = {'ADIF_VER': '3.1.4',
-               'PROGRAMID': __proj_name__,
-               'PROGRAMVERSION': __version__,
-               'CREATED_TIMESTAMP': datetime.datetime.utcnow().strftime('%Y%m%d %H%M%S')
-               }
+    :return: an iterator of chunks of the ADI (header, record 1, ..., record n)"""
 
     field_separator = ' ' * spaces if spaces >= 0 else ' '
 
     if 'HEADER' in data_dict:
+        default = {'ADIF_VER': '3.1.4',
+                   'PROGRAMID': __proj_name__,
+                   'PROGRAMVERSION': __version__,
+                   'CREATED_TIMESTAMP': datetime.datetime.utcnow().strftime('%Y%m%d %H%M%S')
+                   # TODO: Fix deprication > 3.10: datetime.datetime.now(tz=datetime.UTC).strftime('%Y%m%d %H%M%S')
+                   }
+
         data = comment + ' \n'
 
         for p in data_dict['HEADER']:
@@ -287,8 +288,7 @@ def dump(file_name: str, data_dict: dict, comment: str = 'ADIF export by ' + __p
     :param data_dict: the dictionary with header and records
     :param comment: the comment to induce the header
     :param linebreaks: format output with additional linebreaks for readability
-    :param encoding: the file encoding
-    :return: the complete ADI as a string"""
+    :param encoding: the file encoding"""
 
     with open(file_name, 'w', encoding=encoding) as af:
         first = True
