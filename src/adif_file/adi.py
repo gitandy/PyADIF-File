@@ -1,6 +1,7 @@
 """Convert ADIF ADI content to dictionary and vice versa"""
 
 import re
+import copy
 import datetime
 from collections.abc import Iterator
 
@@ -206,6 +207,8 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__,
     :param linebreaks: Format output with additional linebreaks for readability
     :param spaces: Number of spaces between fields
     :return: an iterator of chunks of the ADI (header, record 1, ..., record n)"""
+
+    data_dict = copy.deepcopy(data_dict)
 
     field_separator = ' ' * spaces if spaces >= 0 else ' '
 

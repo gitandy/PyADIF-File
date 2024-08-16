@@ -1,6 +1,7 @@
 """Convert ADIF ADX content to dictionary and vice versa
 The XML is validated against the XSD from ADIF.org"""
 
+import copy
 import datetime
 import os.path
 import xml
@@ -92,7 +93,7 @@ def dump(file_name: str, data_dict: dict, raise_exc=True) -> list[Exception]:
        :return: list of validation exception (if not raised immediately)
        """
 
-    data_dict = data_dict.copy()
+    data_dict = copy.deepcopy(data_dict)
 
     header = {
         'ADIF_VER': '3.1.4',

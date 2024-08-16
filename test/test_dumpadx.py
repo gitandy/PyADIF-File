@@ -182,6 +182,31 @@ class DumpADX(unittest.TestCase):
 
         os.remove(temp_file)
 
+    def test_40_deepcopy(self):
+        adx_dict = {
+            'HEADER': {'PROGRAMVERSION': '1',
+                       'CREATED_TIMESTAMP': '20231204 100000',
+                       },
+            'RECORDS': [{'CALL': 'XX1XXX',
+                         'QSO_DATE': '20231204',
+                         'TIME_ON': '1100',
+                         'QTH': 'Test'
+                         },
+                        {'CALL': 'YY1YYY',
+                         'QSO_DATE': '20231204',
+                         'TIME_ON': '1200',
+                         'QTH_INTL': 'Töst',
+                         }
+                        ]
+                }
+
+        temp_file = get_file_path('testdata/~test.adx')
+        adif_file.adx.dump(temp_file, adx_dict)
+        self.assertNotIn('ADIF_VER', adx_dict['HEADER'])
+        self.assertNotIn('RECORD', adx_dict['RECORDS'])
+
+        os.remove(temp_file)
+
 
 if __name__ == '__main__':
     unittest.main()
