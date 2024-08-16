@@ -81,13 +81,15 @@ def load(file_name: str, validate: bool = False) -> dict:
     return loads(adx_data, validate)
 
 
-def dump(file_name: str, data_dict: dict):
+def dump(file_name: str, data_dict: dict, raise_exc=True) -> list[Exception]:
     """Takes a dictionary and stores it to ADX xml file
        If 'HEADER' is missing the header fields are filled with defaults.
        The XML is validated against the strict XSD
 
        :param file_name: the filename to store the ADX data to
        :param data_dict: the dictionary with header and records
+       :param raise_exc: if the validation exceptions are to be raised immediately
+       :return: list of validation exception (if not raised immediately)
        """
 
     data_dict = data_dict.copy()
@@ -112,13 +114,23 @@ def dump(file_name: str, data_dict: dict):
     rec = data_dict.pop('RECORDS')
     data_dict['RECORDS'] = {'RECORD': rec}
 
-    try:
-        et = ADX_EXPORT_SCHEMA.encode(data_dict)
-        ElementTree(et).write(file_name, xml_declaration=True, encoding='utf-8')
-    except xmlschema.validators.exceptions.XMLSchemaChildrenValidationError as exc:
-        raise UndefinedElementException(f'in {exc.elem.tag}') from None
-    except xmlschema.validators.exceptions.XMLSchemaValidationError as exc:
-        raise MalformedValueException(f'Field "{exc.elem.tag}": {exc.reason}') from None
+    exc = []
+
+    et, errors = ADX_EXPORT_SCHEMA.encode(data_dict, validation='lax')
+    for err in errors:
+        if type(err) is xmlschema.validators.exceptions.XMLSchemaValidationError:
+            if err.elem.tag == 'RECORD':
+                exc.append(UndefinedElementException(f'{err.path}: {err.reason}'))
+            elif err.elem.tag == 'HEADER':
+                exc.append(UndefinedElementException(f'{err.path}: {err.reason}'))
+            else:
+                exc.append(MalformedValueException(f'{err.path}: value "{err.obj}" {err.reason}'))
+
+    if raise_exc and exc:
+        raise exc[0]
+
+    ElementTree(et).write(file_name, xml_declaration=True, encoding='utf-8')
+    return exc
 
 
 __all__ = ['load', 'loads', 'dump', 'MissingRecordsException', 'UndefinedElementException',
