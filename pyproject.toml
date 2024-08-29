@@ -9,8 +9,8 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = ["xmlschema", "xmltodict"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Other Audience",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.9",
@@ -19,10 +19,12 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Communications :: Ham Radio",
     "Topic :: File Formats",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/gitandy/PyADIF-File"
+"Homepage" = "https://github.com/gitandy/PyADIF-File#pyadif-file"
 "Bug Tracker" = "https://github.com/gitandy/PyADIF-File/issues"
 
 
