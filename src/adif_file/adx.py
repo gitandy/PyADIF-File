@@ -10,10 +10,7 @@ from xml.etree.ElementTree import ElementTree, ParseError
 import xmlschema
 import xmltodict
 
-from adif_file.__version__ import __version__ as __version_str__
-
-__proj_name__ = 'PyADIF-File'
-__version__ = __version_str__[1:].split('-')[0]
+from . import __version_str__, __proj_name__
 
 ADX_EXPORT_SCHEMA = xmlschema.XMLSchema(os.path.join(os.path.dirname(__file__), 'xsd/adx314.xsd'))
 ADX_IMPORT_SCHEMA = xmlschema.XMLSchema(os.path.join(os.path.dirname(__file__), 'xsd/adx314generic.xsd'))
@@ -55,10 +52,9 @@ def loads(adx_data: str, validate: bool = False) -> dict:
             raise MalformedValueException(f'Field "{exc.elem.tag}": {exc.reason}') from None
 
     try:
-        data_dict = xmltodict.parse(adx_data, cdata_key='$')
-        data_dict = data_dict['ADX']
-        if ('RECORDS' in data_dict and data_dict['RECORDS'] and
-                'RECORD' in data_dict['RECORDS'] and data_dict['RECORDS']['RECORD']):
+        data_dict = xmltodict.parse(adx_data, cdata_key='$')['ADX']
+        if all(('RECORDS' in data_dict, bool(data_dict['RECORDS']),
+               'RECORD' in data_dict['RECORDS'], bool(data_dict['RECORDS']['RECORD']))):
             data_dict['RECORDS'] = data_dict['RECORDS']['RECORD']
         else:
             data_dict['RECORDS'] = []
@@ -98,7 +94,7 @@ def dump(file_name: str, data_dict: dict, raise_exc=True) -> list[Exception]:
     header = {
         'ADIF_VER': '3.1.4',
         'PROGRAMID': __proj_name__,
-        'PROGRAMVERSION': __version__,
+        'PROGRAMVERSION': __version_str__,
         'CREATED_TIMESTAMP': datetime.datetime.utcnow().strftime('%Y%m%d %H%M%S')
     }
 

@@ -5,10 +5,7 @@ import copy
 import datetime
 from collections.abc import Iterator
 
-from adif_file.__version__ import __version__ as __version_str__
-
-__proj_name__ = 'PyADIF-File'
-__version__ = __version_str__[1:].split('-')[0]
+from . import __version_str__, __proj_name__
 
 
 class TooMuchHeadersException(Exception):
@@ -215,7 +212,7 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__,
     if 'HEADER' in data_dict:
         default = {'ADIF_VER': '3.1.4',
                    'PROGRAMID': __proj_name__,
-                   'PROGRAMVERSION': __version__,
+                   'PROGRAMVERSION': __version_str__,
                    'CREATED_TIMESTAMP': datetime.datetime.utcnow().strftime('%Y%m%d %H%M%S')
                    # TODO: Fix deprication > 3.10: datetime.datetime.now(tz=datetime.UTC).strftime('%Y%m%d %H%M%S')
                    }
