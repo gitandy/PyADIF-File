@@ -1,3 +1,6 @@
+# PyADIF-File (c) 2023-2025 by Andreas Schawo is licensed under CC BY-SA 4.0.
+# To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+
 """Convert ADIF ADI content to dictionary and vice versa"""
 
 import re
@@ -32,7 +35,7 @@ REGEX_ASCII = re.compile(r'[ -~\n\r]*')
 REGEX_PARAM = re.compile(r'[a-zA-Z][a-zA-Z_0-9]*')
 
 
-def unpack(data: str) -> dict:
+def unpack(data: str) -> dict[str, str]:
     """Unpack header or record part to dictionary
     The parameters are converted to uppercase"""
 
@@ -77,7 +80,7 @@ def unpack(data: str) -> dict:
     return unpacked
 
 
-def loadi(adi: str, skip: int = 0) -> Iterator[dict]:
+def loadi(adi: str, skip: int = 0) -> Iterator[dict[str, str]]:
     """Turn ADI formated string to header/records as an iterator over dict
     The skip option is useful if you want to watch a file for new records only. This saves processing time.
 
@@ -86,22 +89,19 @@ def loadi(adi: str, skip: int = 0) -> Iterator[dict]:
     :return: an iterator of records (first record is the header even if not available)
     """
 
-    record_data = adi
-    if not adi.startswith('<'):  # If a header is available
-        hr_list = re.split(r'<[eE][oO][hH]>', adi)
-        if len(hr_list) > 2:
-            raise TooMuchHeadersException()
-
+    hr_list = re.split(r'<[eE][oO][hH]>', adi)
+    if len(hr_list) == 1:  # Header is missing
+        yield {}
+        record_data = hr_list[0]
+    elif len(hr_list) > 2:  # More than one header
+        raise TooMuchHeadersException()
+    else:  # One header and the records
         yield unpack(hr_list[0])
         record_data = hr_list[1]
-    else:  # Empty record for missing header
-        yield {}
 
-    i = 0
-    for rec in re.finditer(r'(.*?)<[eE][oO][rR]>', record_data, re.S):
+    for i, rec in enumerate(re.finditer(r'(.*?)<[eE][oO][rR]>', record_data, re.S)):
         if i >= skip:
             yield unpack(rec.groups()[0])
-        i += 1
 
 
 def loads(adi: str, skip: int = 0) -> dict:
@@ -109,7 +109,7 @@ def loads(adi: str, skip: int = 0) -> dict:
     The parameters are converted to uppercase
 
         {
-        'HEADER': None,
+        'HEADER': {},
         'RECORDS': [list of records]
         }
 
@@ -121,7 +121,7 @@ def loads(adi: str, skip: int = 0) -> dict:
     :return: the ADI as a dict
     """
 
-    doc = {'HEADER': None,
+    doc = {'HEADER': {},
            'RECORDS': []
            }
 
@@ -141,7 +141,7 @@ def load(file_name: str, skip: int = 0, encoding=None) -> dict:
        The parameters are converted to uppercase
 
            {
-           'HEADER': None,
+           'HEADER': {},
            'RECORDS': [list of records]
            }
 
@@ -164,7 +164,7 @@ def pack(param: str, value: str, dtype: str = None) -> str:
     """Generates ADI tag if value is not empty
     Does not generate tags for *_INTL types as required by specification.
 
-    :param param: the tag parameter (converte to uppercase)
+    :param param: the tag parameter (converted to uppercase)
     :param value: the tag value (or tag definition if param is a USERDEF field)
     :param dtype: the optional datatype (mainly used for USERDEFx in header)
     :return: <param:length>value
@@ -297,7 +297,6 @@ def dump(file_name: str, data_dict: dict, comment: str = 'ADIF export by ' + __p
                 first = False
             else:
                 af.write('\n\n' if linebreaks else '\n')
-
             af.write(chunk)
 
 

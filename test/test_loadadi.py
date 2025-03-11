@@ -54,6 +54,14 @@ class LoadADI(unittest.TestCase):
         self.assertEqual(3, len(adi_dict['HEADER']))
         self.assertEqual(5, len(adi_dict['RECORDS']))
 
+    def test_51_goodfile_missing_comment(self):
+        adi_dict = adif_file.adi.load(get_file_path('testdata/goodfile_missing hcomment.txt'))
+
+        self.assertIn('HEADER', adi_dict)
+        self.assertIn('RECORDS', adi_dict)
+        self.assertEqual(3, len(adi_dict['HEADER']))
+        self.assertEqual(3, len(adi_dict['RECORDS']))
+
     def test_52_no_header(self):
         adi_dict = adif_file.adi.load(get_file_path('testdata/goodfile_no_h.txt'))
 
