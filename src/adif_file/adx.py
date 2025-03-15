@@ -1,8 +1,10 @@
+# PyADIF-File (c) 2023-2025 by Andreas Schawo is licensed under CC BY-SA 4.0.
+# To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+
 """Convert ADIF ADX content to dictionary and vice versa
 The XML is validated against the XSD from ADIF.org"""
 
 import copy
-import datetime
 import os.path
 import xml
 from xml.etree.ElementTree import ElementTree, ParseError
@@ -11,6 +13,7 @@ import xmlschema
 import xmltodict
 
 from . import __version_str__, __proj_name__
+from .util import get_cur_adif_dt
 
 ADX_EXPORT_SCHEMA = xmlschema.XMLSchema(os.path.join(os.path.dirname(__file__), 'xsd/adx314.xsd'))
 ADX_IMPORT_SCHEMA = xmlschema.XMLSchema(os.path.join(os.path.dirname(__file__), 'xsd/adx314generic.xsd'))
@@ -95,7 +98,7 @@ def dump(file_name: str, data_dict: dict, raise_exc=True) -> list[Exception]:
         'ADIF_VER': '3.1.4',
         'PROGRAMID': __proj_name__,
         'PROGRAMVERSION': __version_str__,
-        'CREATED_TIMESTAMP': datetime.datetime.utcnow().strftime('%Y%m%d %H%M%S')
+        'CREATED_TIMESTAMP': get_cur_adif_dt()
     }
 
     if 'HEADER' not in data_dict:

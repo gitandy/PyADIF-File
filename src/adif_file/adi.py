@@ -5,10 +5,10 @@
 
 import re
 import copy
-import datetime
 from collections.abc import Iterator
 
 from . import __version_str__, __proj_name__
+from .util import get_cur_adif_dt
 
 
 class TooMuchHeadersException(Exception):
@@ -213,8 +213,7 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__,
         default = {'ADIF_VER': '3.1.4',
                    'PROGRAMID': __proj_name__,
                    'PROGRAMVERSION': __version_str__,
-                   'CREATED_TIMESTAMP': datetime.datetime.utcnow().strftime('%Y%m%d %H%M%S')
-                   # TODO: Fix deprication > 3.10: datetime.datetime.now(tz=datetime.UTC).strftime('%Y%m%d %H%M%S')
+                   'CREATED_TIMESTAMP': get_cur_adif_dt(),
                    }
 
         data = comment + ' \n'
