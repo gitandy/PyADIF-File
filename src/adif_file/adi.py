@@ -95,7 +95,8 @@ def validate_field(field: str, header: bool = False, value: str = '', userdefs=N
             raise IllegalFieldNameException(f'Record field: {field}')
 
 
-def unpack(data: str, validate: bool = False, header: bool = False, userdefs: list = None) -> dict[str, str | list[dict]]:
+def unpack(data: str, validate: bool = False, header: bool = False, userdefs: list = None) -> dict[
+    str, str | list[dict]]:
     """Unpack header or record part to dictionary
     The parameters are converted to uppercase
 
@@ -300,6 +301,7 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__, val
 
     field_separator = ' ' * spaces if spaces >= 0 else ' '
 
+    userdefs = []
     if 'HEADER' in data_dict:
         default = {'ADIF_VER': '3.1.4',
                    'PROGRAMID': __proj_name__,
@@ -307,8 +309,6 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__, val
                    'CREATED_TIMESTAMP': get_cur_adif_dt(),
                    }
 
-    userdefs = []
-    if 'HEADER' in data_dict:
         data = comment + ' \n'
 
         for p in data_dict['HEADER']:
@@ -322,7 +322,8 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__, val
                     data += (pack(f'USERDEF{i}', u['userdef'], u['dtype'], validate=validate, header=True) +
                              ('\n' if linebreaks else field_separator))
         for p in default:
-            data += pack(p, default[p], validate=validate, header=True) + ('\n' if linebreaks else field_separator)
+            data += pack(p, default[p], validate=validate, header=True) + (
+                '\n' if linebreaks else field_separator)
         data += '<EOH>'
         yield data
 
