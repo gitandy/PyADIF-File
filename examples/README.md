@@ -42,6 +42,8 @@ nu_plugin_adi
 -------------
 This one provides a plugin to use ADI format inside [Nushell](https://www.nushell.sh/) easily.
 
+![](nu_plugin_adi.png)
+
 The plugin provides `to adi` and `from adi`.
 
 It's just the start of development so do not be afraid of some misbehaviour.

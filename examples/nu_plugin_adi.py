@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # Copyright 2025 by Andreas Schawo <df1asc@darc.de>, licensed under CC BY-SA 4.0
 
+import os
 import sys
 import json
 
 from adif_file import adi
 
-NUSHELL_VERSION = '0.102.0'
-PLUGIN_VERSION = '0.1.0'
+NUSHELL_VERSION = 0, 102
+PLUGIN_VERSION = '0.1.1'
 
 __call_command__ = ''
 __call_id__ = None
@@ -101,15 +102,14 @@ def adif_time2iso(time: str) -> str:
 def process_to_adi(data):
     """Convert table data to ADIF string"""
     global __adi_doc__
-    sys.stderr.write('to adi: ' + json.dumps(data, indent=2) + '\n')
 
     try:
-        rec_data = data[1]['List']['Record']['val']
+        rec_data = data['val']
         record = {}
         for f in rec_data:
             for t in rec_data[f]:
                 val = str(rec_data[f][t]['val'])
-                if f.upper().endswith('DATE'):
+                if 'DATE' in f.upper():
                     val = val.replace('-', '')
                 elif f.upper().startswith('TIME'):
                     val = val.replace(':', '')
@@ -142,7 +142,7 @@ def process_from_adi():
             val = {}
             for f in fieldnames:
                 rec_val: str = rec[f] if f in rec else ''
-                if f.endswith('DATE'):
+                if 'DATE' in f:
                     rec_val = adif_date2iso(rec_val)
                 elif f.startswith('TIME'):
                     rec_val = adif_time2iso(rec_val)
@@ -169,7 +169,7 @@ def tell_nushell_encoding():
     sys.stdout.flush()
 
 
-def tell_nushell_hello():
+def tell_nushell_hello(nu_version=''):
     """
     A `Hello` message is required at startup to inform nushell of the protocol capabilities and
     compatibility of the plugin. The version specified should be the version of nushell that this
@@ -178,7 +178,7 @@ def tell_nushell_hello():
     hello = {
         'Hello': {
             'protocol': 'nu-plugin',  # always this value
-            'version': NUSHELL_VERSION,
+            'version': nu_version,
             'features': [],
         }
     }
@@ -187,13 +187,13 @@ def tell_nushell_hello():
     sys.stdout.flush()
 
 
-def write_response(id, response):
+def write_response(call_id, response):
     """
     Format a response to a plugin call.
     """
     wrapped_response = {
         'CallResponse': [
-            id,
+            call_id,
             response,
         ]
     }
@@ -202,14 +202,14 @@ def write_response(id, response):
     sys.stdout.flush()
 
 
-def write_error(id, text, span=None):
+def write_error(call_id, text, span=None):
     """
     Format error response to nushell.
     """
     error = (
         {
             'Error': {
-                'msg': 'ERROR from plugin',
+                'msg': 'ADI plugin error',
                 'labels': [
                     {
                         'text': text,
@@ -221,29 +221,34 @@ def write_error(id, text, span=None):
         if span is not None
         else {
             'Error': {
-                'msg': 'ERROR from plugin',
+                'msg': 'ADI plugin error',
                 'help': text,
             }
         }
     )
-    write_response(id, error)
+    write_response(call_id, error)
 
 
-def handle_input(input):
-    global __call_command__, __call_id__, __call_span__, __adi_doc__
+def handle_input(input_data):
+    global __call_command__, __call_id__, __call_span__, __adi_doc__, __adi_table__
 
-    if 'Hello' in input:
-        if input['Hello']['version'] != NUSHELL_VERSION:
-            exit(1)
-        else:
-            return
-    elif input == 'Goodbye':
+    if 'Hello' in input_data:
+        match input_data:
+            case {'Hello': {'version': nu_ver}}:
+                major, minor, patch = [int(part) for part in nu_ver.split('.')]
+                if major == NUSHELL_VERSION[0] and minor >= NUSHELL_VERSION[1]:
+                    return
+                else:
+                    write_error(__call_id__,
+                                f'Nushell version {nu_ver} does not match. Required Nushell >= {NUSHELL_VERSION}')
+
+    elif input_data == 'Goodbye':
         exit(0)
-    elif 'Call' in input:
-        [id, plugin_call] = input['Call']
+    elif 'Call' in input_data:
+        [call_id, plugin_call] = input_data['Call']
         if plugin_call == 'Metadata':
             write_response(
-                id,
+                call_id,
                 {
                     'Metadata': {
                         'version': PLUGIN_VERSION,
@@ -251,10 +256,10 @@ def handle_input(input):
                 },
             )
         elif plugin_call == 'Signature':
-            write_response(id, signatures())
+            write_response(call_id, signatures())
         elif 'Run' in plugin_call:
             __call_command__ = plugin_call['Run']['name']
-            __call_id__ = id
+            __call_id__ = call_id
             __call_span__ = plugin_call['Run']['call']['head']
 
             if __call_command__ == 'to adi':
@@ -272,20 +277,22 @@ def handle_input(input):
                         comment='Exported by ADIF Nushell-Plugin',
                         linebreaks=False).__next__() + '\n'
         else:
-            write_error(id, 'Operation not supported: ' + str(plugin_call))
-    elif 'Data' in input:
+            write_error(call_id, 'Operation not supported: ' + str(plugin_call))
+    elif 'Data' in input_data:
         if __call_command__ == 'to adi':
-            process_to_adi(input['Data'])
+            match input_data['Data']:
+                case [_, {'List': {'Record': data}}]:
+                    process_to_adi(data)
         elif __call_command__ == 'from adi':
-            match input['Data']:
+            match input_data['Data']:
                 case [_, {'Raw': {'Ok': data}}]:
                     __adi_doc__ += bytes(data).decode('utf8')
                 case [_, {'Raw': {'Err': text}}]:
                     write_error(__call_id__, text, __call_span__)
         else:
             sys.stderr.write(f'Data for unknown call name: "{__call_command__}"')
-            sys.stderr.write('Data: ' + str(input['Data']) + '\n')
-    elif 'End' in input:
+            sys.stderr.write('Data: ' + str(input_data['Data']) + '\n')
+    elif 'End' in input_data:
         if __call_command__ == 'to adi':
             val = {
                 'String': {
@@ -314,22 +321,29 @@ def handle_input(input):
             }
         }
         write_response(__call_id__, p_data)
-        exit(0)
+    elif 'Signal' in input_data:
+        if input_data['Signal'] == 'Reset':
+            __call_command__ = ''
+            __call_id__ = None
+            __call_span__ = None
+            __adi_table__ = []
+            __adi_doc__ = ''
+        elif input_data['Signal'] == 'Interrupt':
+            exit(1)
     else:
-        sys.stderr.write('Unknown message: ' + str(input) + '\n')
+        sys.stderr.write('Unknown message: ' + str(input_data) + '\n')
         exit(1)
 
 
-def plugin():
+def plugin(nu_version=''):
     tell_nushell_encoding()
-    tell_nushell_hello()
+    tell_nushell_hello(nu_version)
     for line in sys.stdin:
-        input = json.loads(line)
-        handle_input(input)
+        handle_input(json.loads(line))
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 2 and sys.argv[1] == '--stdio':
-        plugin()
+        plugin(os.environ.get('NU_VERSION', ''))
     else:
-        print('Run me from inside nushell!')
+        print('Run me from inside nushell to unlock the magic!')
