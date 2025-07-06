@@ -1,3 +1,6 @@
+# PyADIF-File (c) 2024 by Andreas Schawo is licensed under CC BY-SA 4.0.
+# To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+
 import os
 import unittest
 
@@ -39,12 +42,41 @@ class LoadADI(unittest.TestCase):
         self.assertDictEqual(exp_dict1, adif_file.adi.unpack(adi_hdr1))
         self.assertDictEqual(exp_dict2, adif_file.adi.unpack(adi_hdr2))
 
+    def test_17_unpack_header_strip(self):
+        adi_hdr1 = '''ADIF Export by Testprog
+            <ADIF_VER :5>3.1.4 < PROGRAMID:8>Testprog < PROGRAMVERSION :4>v0.2'''
+        adi_hdr2 = '''ADIF Export by Testprog
+                <ADIF_VER :5>3.1.4
+                < PROGRAMID:8>Testprog 
+                < PROGRAMVERSION :4>v0.2'''
+
+        exp_dict = {'ADIF_VER': '3.1.4', 'PROGRAMID': 'Testprog', 'PROGRAMVERSION': 'v0.2'}
+        self.assertDictEqual(exp_dict, adif_file.adi.unpack(adi_hdr1))
+        self.assertDictEqual(exp_dict, adif_file.adi.unpack(adi_hdr2))
+
+        exp_dict_nostrip = {'ADIF_VER ': '3.1.4', ' PROGRAMID': 'Testprog', ' PROGRAMVERSION ': 'v0.2'}
+        self.assertDictEqual(exp_dict_nostrip, adif_file.adi.unpack(adi_hdr1, strip_tags=False))
+        self.assertDictEqual(exp_dict_nostrip, adif_file.adi.unpack(adi_hdr2, strip_tags=False))
+
     def test_20_unpack_record(self):
         adi_rec_app = '<APP_TESTAPP_CHANNEL:2:N>24'
         adi_rec_name = '<NAME:4>Test'
 
         self.assertDictEqual({'APP_TESTAPP_CHANNEL': '24'}, adif_file.adi.unpack(adi_rec_app))
         self.assertDictEqual({'NAME': 'Test'}, adif_file.adi.unpack(adi_rec_name))
+
+    def test_25_unpack_record_strip(self):
+        adi_rec_app = '< APP_TESTAPP_CHANNEL:2:N>24'
+        adi_rec_name = '< NAME :4>Test'
+        adi_rec_call = '<CALL :6>XX1XXX'
+
+        self.assertDictEqual({'APP_TESTAPP_CHANNEL': '24'}, adif_file.adi.unpack(adi_rec_app))
+        self.assertDictEqual({'NAME': 'Test'}, adif_file.adi.unpack(adi_rec_name))
+        self.assertDictEqual({'CALL': 'XX1XXX'}, adif_file.adi.unpack(adi_rec_call))
+
+        self.assertDictEqual({' APP_TESTAPP_CHANNEL': '24'}, adif_file.adi.unpack(adi_rec_app, strip_tags=False))
+        self.assertDictEqual({' NAME ': 'Test'}, adif_file.adi.unpack(adi_rec_name, strip_tags=False))
+        self.assertDictEqual({'CALL ': 'XX1XXX'}, adif_file.adi.unpack(adi_rec_call, strip_tags=False))
 
     def test_50_goodfile(self):
         adi_dict = adif_file.adi.load(get_file_path('testdata/goodfile.txt'))

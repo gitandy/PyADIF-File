@@ -35,9 +35,12 @@ REGEX_ASCII = re.compile(r'[ -~\n\r]*')
 REGEX_PARAM = re.compile(r'[a-zA-Z][a-zA-Z_0-9]*')
 
 
-def unpack(data: str) -> dict[str, str]:
+def unpack(data: str, strip_tags: bool = True) -> dict[str, str]:
     """Unpack header or record part to dictionary
-    The parameters are converted to uppercase"""
+    The parameters are converted to uppercase
+    :param data: string with multiple ADIF tag and value for a whole record
+    :param strip_tags: remove any leading or trailing whitespaces in tag names (default: True)
+    :return: dictionary of ADIF tag and value"""
 
     unpacked = {}
 
@@ -56,7 +59,7 @@ def unpack(data: str) -> dict[str, str]:
         dtype = None
         try:
             tag_def = tag.split(':')
-            param = tag_def[0]
+            param = tag_def[0].strip() if strip_tags else tag_def[0]
             length = tag_def[1]
             if len(tag_def) == 3:
                 dtype = tag_def[2]
@@ -80,12 +83,13 @@ def unpack(data: str) -> dict[str, str]:
     return unpacked
 
 
-def loadi(adi: str, skip: int = 0) -> Iterator[dict[str, str]]:
+def loadi(adi: str, skip: int = 0, strip_tags: bool = True) -> Iterator[dict[str, str]]:
     """Turn ADI formated string to header/records as an iterator over dict
     The skip option is useful if you want to watch a file for new records only. This saves processing time.
 
     :param adi: the ADI data
     :param skip: skip first number of records (does not apply for header)
+    :param strip_tags: remove any leading or trailing whitespaces in tag names (default: True)
     :return: an iterator of records (first record is the header even if not available)
     """
 
@@ -96,15 +100,15 @@ def loadi(adi: str, skip: int = 0) -> Iterator[dict[str, str]]:
     elif len(hr_list) > 2:  # More than one header
         raise TooMuchHeadersException()
     else:  # One header and the records
-        yield unpack(hr_list[0])
+        yield unpack(hr_list[0], strip_tags)
         record_data = hr_list[1]
 
     for i, rec in enumerate(re.finditer(r'(.*?)<[eE][oO][rR]>', record_data, re.S)):
         if i >= skip:
-            yield unpack(rec.groups()[0])
+            yield unpack(rec.groups()[0], strip_tags)
 
 
-def loads(adi: str, skip: int = 0) -> dict:
+def loads(adi: str, skip: int = 0, strip_tags: bool = True) -> dict:
     """Turn ADI formated string to dictionary
     The parameters are converted to uppercase
 
@@ -118,6 +122,7 @@ def loads(adi: str, skip: int = 0) -> dict:
 
     :param adi: the ADI data
     :param skip: skip first number of records (does not apply for header)
+    :param strip_tags: remove any leading or trailing whitespaces in tag names (default: True)
     :return: the ADI as a dict
     """
 
@@ -126,7 +131,7 @@ def loads(adi: str, skip: int = 0) -> dict:
            }
 
     first = True
-    for rec in loadi(adi, skip):
+    for rec in loadi(adi, skip, strip_tags):
         if first:
             doc['HEADER'] = rec
             first = False
@@ -136,7 +141,7 @@ def loads(adi: str, skip: int = 0) -> dict:
     return doc
 
 
-def load(file_name: str, skip: int = 0, encoding=None) -> dict:
+def load(file_name: str, skip: int = 0, encoding=None, strip_tags: bool = True) -> dict:
     """Load ADI formated file to dictionary
        The parameters are converted to uppercase
 
@@ -151,13 +156,14 @@ def load(file_name: str, skip: int = 0, encoding=None) -> dict:
        :param file_name: the file name where the ADI data is stored
        :param skip: skip first number of records (does not apply for header)
        :param encoding: the file encoding
+       :param strip_tags: remove any leading or trailing whitespaces in tag names (default: True)
        :return: the ADI as a dict
        """
 
     with open(file_name, encoding=encoding) as af:
         data = af.read()
 
-    return loads(data, skip)
+    return loads(data, skip, strip_tags)
 
 
 def pack(param: str, value: str, dtype: str = None) -> str:
