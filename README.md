@@ -5,10 +5,44 @@ PyADIF-File
 [![Test & Lint](https://github.com/gitandy/PyADIF-File/actions/workflows/python-test.yml/badge.svg)](https://github.com/gitandy/PyADIF-File/actions/workflows/python-test.yml)
 [![Python versions](https://img.shields.io/pypi/pyversions/pyadif_file.svg?color=%2334D058&label=Python)](https://pypi.org/project/pyadif_file)
 
-Author: Andreas Schawo, DF1ASC 
+Author: Andreas Schawo, DF1ASC
 ([HamQTH](http://www.hamqth.com/DF1ASC), [eQSL](http://www.eqsl.cc/Member.cfm?DF1ASC))
 
-Convert [ADIF](https://adif.org/) ADI content (ham radio QSO logs) to dictionary and vice versa
+Convert [ADIF](https://adif.org/) ADI or ADX content (ham radio QSO logs) to dictionary and vice versa
+
+
+Installation
+------------
+The package is available via [PyPI](https://pypi.org/project/PyADIF-File/)
+
+    pip install pyadif-file
+
+High level API
+--------------
+
+The high level API aims to ease the access by running helpers for e.g. date and time conversion,
+validating call and locator formats or replacing non ASCII chars for ADI.
+
+In the high level API the file content is represented as classes.
+ADIFDoc holds evrything together and contains an ADIFHeader and zero or more ADIFRecords.
+
+    from adif_file.adif_doc import ADIFDoc, ADIFHeader, ADIFRecord
+    doc = ADIFDoc()
+    doc.header = ADIFHeader(program_id='MyProg', program_version='0.1')
+    doc.append_record(ADIFRecord('2025-02-23', '12:34', 'DB2GFS/P'))
+    doc.to_adi('example.adi')
+
+Alternativly open an existing file to display records
+
+    doc = ADIFDoc('example2.adi')
+    for r in doc.records():
+        print(r)
+
+Low level API
+-------------
+
+The modules adi and adx are serving the low level API if you want to handle the content by yourself.
+In the low level API the file content is represented as a dictionary.
 
 The required/resulting dictionary format for ADI is
 
@@ -20,34 +54,26 @@ The required/resulting dictionary format for ADI is
     }
 
 For ADI the header or each record is/must be a dictionary in the format
-    
+
     {
         ADIF parameter name: Text value,
     }
 
 For ADI a user definition is a dictionary of
-    
+
     {
         'dtype': one char representing the type,
         'userdef': the field definition text
     }
 
-The library also supports ADX import/export as compatible as possible to the ADI part. 
+The library also supports ADX import/export as compatible as possible to the ADI part.
 Though it will differ in handling application and user definitions.
 It relys on the [ADX schemas](https://adif.org/314/ADIF_314.htm#ADX_Schemas) from adif.org.
 For the ADX import there is no validation by default to be able to read fast.
-
-Installation
-------------
-The package is available via [PyPI](https://pypi.org/project/PyADIF-File/)
-
-    pip install pyadif-file
-
-Usage
------
-
 For reading and writing files you can use adi.load or adi.dump.
 There is a corresponding variant for handling string: adi.loads and adi.dumps.
+
+### Example reading ADI
 
 Here is an example for reading an ADI file:
 
@@ -63,7 +89,6 @@ Here is an example for reading an ADI file:
     QSO on 20231008 at 1146 with DL5HJK
     QSO on 20231009 at 1147 with M3KJH
     QSO on 20231010 at 1148 with HB4FDS
-
 
 ### Exporting ADI
 
@@ -81,9 +106,11 @@ The source code is available at [GitHub](https://github.com/gitandy/PyADIF-File)
 
 Copyright
 ---------
-PyADIF-File &copy; 2023-2025 by Andreas Schawo is licensed under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/) 
+PyADIF-File &copy; 2023-2025 by Andreas Schawo is licensed
+under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/)
 
 PyADIF-File uses
+
 * xmlschema Copyright (c), 2016-2022, SISSA (Scuola Internazionale Superiore di Studi Avanzati)
 * xmltodict Copyright (c), 2012 Martin Blech and individual contributors
 
