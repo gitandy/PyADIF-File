@@ -5,6 +5,7 @@
 import re
 import sys
 import datetime
+from typing import Union
 
 
 def get_cur_adif_dt() -> str:
@@ -65,7 +66,7 @@ def check_format(exp: re.Pattern, txt: str) -> bool:
     return bool(re.fullmatch(exp, txt))
 
 
-def check_call(call: str) -> None | tuple:
+def check_call(call: str) -> Union[None, tuple]:
     """Test a call sign against a regular expression
     :param call: a call sign
     :return: tuple of parts ('Country prefix/', 'Call sign', '/Operation suffix')"""
