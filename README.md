@@ -81,7 +81,7 @@ The source code is available at [GitHub](https://github.com/gitandy/PyADIF-File)
 
 Copyright
 ---------
-PyADIF-File &copy; 2023-2024 by Andreas Schawo is licensed under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/) 
+PyADIF-File &copy; 2023-2025 by Andreas Schawo is licensed under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/) 
 
 PyADIF-File uses
 * xmlschema Copyright (c), 2016-2022, SISSA (Scuola Internazionale Superiore di Studi Avanzati)
