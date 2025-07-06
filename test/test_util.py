@@ -9,12 +9,12 @@ from adif_file.util import *
 class Util(unittest.TestCase):
     def test_10_conv_adfidate(self):
         self.assertEqual('2025-04-25', adif_date2iso('20250425'))
-        self.assertEqual('2025042', adif_date2iso('2025042'))  # Todo: should raise an ValueError
+        self.assertRaises(ValueError, adif_date2iso, '2025042')
 
     def test_20_conv_adfitime(self):
         self.assertEqual('11:25', adif_time2iso('1125'))
         self.assertEqual('18:33:45', adif_time2iso('183345'))
-        self.assertEqual('18334', adif_time2iso('18334'))  # Todo: should raise an ValueError
+        self.assertRaises(ValueError, adif_time2iso, '18334')
 
     def test_30_conv_isodate(self):
         self.assertEqual('20250425', iso_date2adif('2025-04-25'))

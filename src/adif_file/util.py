@@ -17,17 +17,15 @@ def get_cur_adif_dt() -> str:
 
 def adif_date2iso(date: str) -> str:
     """Tries to convert ADIF date to iso format"""
-    # Todo: should raise a ValueError if wrong format
-    if not date or len(date) != 8:
-        return date
+    if not check_format(REGEX_ADIFDATE, date):
+        raise ValueError(f'Not a valide ADIF date "{date}"')
     return date[:4] + '-' + date[4:6] + '-' + date[6:8]
 
 
 def adif_time2iso(time: str) -> str:
     """Tries to convert ADIF time to iso format"""
-    # Todo: should raise a ValueError if wrong format
-    if not time or len(time) not in (4, 6):
-        return time
+    if not check_format(REGEX_ADIFTIME, time):
+        raise ValueError(f'Not a valide ADIF time "{time}"')
     return time[:2] + ':' + time[2:4] + (':' + time[4:6] if len(time) == 6 else '')
 
 
