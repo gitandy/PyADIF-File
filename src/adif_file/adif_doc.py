@@ -3,11 +3,16 @@
 
 """Provides an high level access to ADIF data"""
 import os
+from warnings import warn
 from typing import Iterator, Union
 
 from . import __version_str__, __proj_name__
 from .util import get_cur_adif_dt, adif_time2iso, adif_date2iso
 from . import adi, adx, util
+
+
+class FormatWarning(Warning):
+    pass
 
 
 class ADIFRecordBase:
@@ -40,13 +45,16 @@ class ADIFRecord(ADIFRecordBase):
     """Abstarction of ADIF QSO records"""
     __cls_fields__ = ('date', 'time', 'call', 'name', 'own_call')
 
-    def __init__(self, date: str = '', time: str = '', call=''):
+    def __init__(self, date: str, time: str, own_call: str, call: str, band: str, mode: str,
+                 rst_sent='', rst_rcvd='',
+                 locator='', qth='', name='',
+                 own_locator='', own_qth='', own_name=''):
         super().__init__()
 
         self.__data__ = {
             'QSO_DATE': util.iso_date2adif(date) if date else '',
             'TIME_ON': util.iso_time2adif(time) if time else '',
-            'CALL': call if call else '',
+            'CALL': '',
             'NAME': '',
             'QTH': '',
             'GRIDSQUARE': '',
@@ -57,9 +65,15 @@ class ADIFRecord(ADIFRecordBase):
             'FREQ': '',
             'TX_PWR': '',
             'STATION_CALLSIGN': '',
+            'MY_NAME': '',
             'MY_CITY': '',
-            'MY_GRIDSQUARE': ''
+            'MY_GRIDSQUARE': '',
         }
+
+        self.call = call
+        self.own_call = own_call
+        self.rst_sent = rst_sent if rst_sent else '599' if mode == 'CW' else '59'
+        self.rst_rcvd = rst_rcvd if rst_rcvd else '599' if mode == 'CW' else '59'
 
     @property
     def date(self) -> str:
@@ -78,16 +92,48 @@ class ADIFRecord(ADIFRecordBase):
         self.__data__['TIME_ON'] = get_cur_adif_dt().split()[1] if not time else time.replace(':', '')
 
     @property
+    def own_call(self) -> str:
+        return self.__data__['STATION_CALLSIGN']
+
+    @own_call.setter
+    def own_call(self, callsign: str):
+        if not util.check_format(util.REGEX_CALL, callsign):
+            warn(f'Invalid callsign format "{callsign}"', FormatWarning)
+        self.__data__['STATION_CALLSIGN'] = callsign
+
+    @property
     def call(self) -> str:
         return self.__data__['CALL']
+
+    @call.setter
+    def call(self, callsign: str):
+        if not util.check_format(util.REGEX_CALL, callsign):
+            warn(f'Invalid callsign format "{callsign}"', FormatWarning)
+        self.__data__['CALL'] = callsign
+
+    @property
+    def rst_sent(self) -> str:
+        return self.__data__['RST_SENT']
+
+    @rst_sent.setter
+    def rst_sent(self, rst: str):
+        if not util.check_format(util.REGEX_RST, rst):
+            warn(f'Invalid RST format "{rst}"', FormatWarning)
+        self.__data__['RST_SENT'] = rst
+
+    @property
+    def rst_rcvd(self) -> str:
+        return self.__data__['RST_RCVD']
+
+    @rst_rcvd.setter
+    def rst_rcvd(self, rst: str):
+        if not util.check_format(util.REGEX_RST, rst):
+            warn(f'Invalid RST format "{rst}"', FormatWarning)
+        self.__data__['RST_RCVD'] = rst
 
     @property
     def name(self) -> str:
         return self.__data__['NAME']
-
-    @property
-    def own_call(self) -> str:
-        return self.__data__['STATION_CALLSIGN']
 
 
 class ADIFHeader(ADIFRecordBase):
@@ -134,7 +180,8 @@ class ADIFHeader(ADIFRecordBase):
 class ADIFDoc:
     """Abstraction of a whole ADIF file containing a header and multiple records"""
 
-    def __init__(self, file_name=''):
+    def __init__(self, file_name=None,
+                 own_call: str = '', own_locator: str = '', own_qth: str = '', own_name: str = ''):
         self.__records__: list[ADIFRecord] = []
 
         if file_name:
@@ -146,6 +193,13 @@ class ADIFDoc:
             for r in doc['RECORDS']:
                 self.__records__.append(ADIFRecord.from_dict(r))
         else:
+            self.__own_data__ = {
+                'STATION_CALLSIGN': '',
+                'MY_CITY': '',
+                'MY_GRIDSQUARE': '',
+                'MY_NAME': '',
+            }
+
             self.__header__: ADIFHeader = ADIFHeader()
             self.__records__: list[ADIFRecord] = []
 
@@ -159,6 +213,15 @@ class ADIFDoc:
             self.__header__ = header
         else:
             raise Exception('Header must be of type ADIFHeader')
+
+    def create_record(self, date: str, time: str, own_call: str, call: str, band: str, mode: str,
+                      **params) -> ADIFRecord:
+        """Creates a new record, appends it to the list and also returns it
+        If you gave your own data at class creation this data will be used"""
+        params = self.__own_data__ | params
+        rec = ADIFRecord(date, time, own_call, call, band, mode, **params)
+        self.append_record(rec)
+        return rec
 
     def append_record(self, rec: ADIFRecord):
         if type(rec) is ADIFRecord:
