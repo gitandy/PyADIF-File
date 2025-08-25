@@ -5,10 +5,11 @@
 
 import re
 import copy
+from warnings import warn
 from collections.abc import Iterator
 
 from . import __version_str__, __proj_name__
-from .util import get_cur_adif_dt
+from .util import get_cur_adif_dt, replace_non_ascii
 
 
 class TooMuchHeadersException(Exception):
@@ -31,6 +32,10 @@ class IllegalDataTypeException(Exception):
     pass
 
 
+class NonASCIIWarning(Warning):
+    pass
+
+
 REGEX_ASCII = re.compile(r'[ -~\n\r]*')
 REGEX_PARAM = re.compile(r'[a-zA-Z][a-zA-Z_0-9]*')
 
@@ -40,7 +45,8 @@ def unpack(data: str, strip_tags: bool = True) -> dict[str, str]:
     The parameters are converted to uppercase
     :param data: string with multiple ADIF tag and value for a whole record
     :param strip_tags: remove any leading or trailing whitespaces in tag names (default: True)
-    :return: dictionary of ADIF tag and value"""
+    :return: dictionary of ADIF tag and value
+    :raises TagDefinitionException: if the tag definition is invalid or the length is not an integer"""
 
     unpacked = {}
 
@@ -91,6 +97,8 @@ def loadi(adi: str, skip: int = 0, strip_tags: bool = True) -> Iterator[dict[str
     :param skip: skip first number of records (does not apply for header)
     :param strip_tags: remove any leading or trailing whitespaces in tag names (default: True)
     :return: an iterator of records (first record is the header even if not available)
+    :raises TooMuchHeadersException: if the data contains more than one header
+    :raises TagDefinitionException: if the tag definition is invalid or the length is not an integer
     """
 
     hr_list = re.split(r'<[eE][oO][hH]>', adi)
@@ -124,6 +132,8 @@ def loads(adi: str, skip: int = 0, strip_tags: bool = True) -> dict:
     :param skip: skip first number of records (does not apply for header)
     :param strip_tags: remove any leading or trailing whitespaces in tag names (default: True)
     :return: the ADI as a dict
+    :raises TooMuchHeadersException: if the data contains more than one header
+    :raises TagDefinitionException: if the tag definition is invalid or the length is not an integer
     """
 
     doc = {'HEADER': {},
@@ -143,22 +153,24 @@ def loads(adi: str, skip: int = 0, strip_tags: bool = True) -> dict:
 
 def load(file_name: str, skip: int = 0, encoding=None, strip_tags: bool = True) -> dict:
     """Load ADI formated file to dictionary
-       The parameters are converted to uppercase
+    The parameters are converted to uppercase
 
-           {
-           'HEADER': {},
-           'RECORDS': [list of records]
-           }
+       {
+       'HEADER': {},
+       'RECORDS': [list of records]
+       }
 
-       The skip option is useful if you want to watch a file for new records only. This saves processing time.
-       In this case consider to use loadi() directly.
+    The skip option is useful if you want to watch a file for new records only. This saves processing time.
+    In this case consider to use loadi() directly.
 
-       :param file_name: the file name where the ADI data is stored
-       :param skip: skip first number of records (does not apply for header)
-       :param encoding: the file encoding
-       :param strip_tags: remove any leading or trailing whitespaces in tag names (default: True)
-       :return: the ADI as a dict
-       """
+    :param file_name: the file name where the ADI data is stored
+    :param skip: skip first number of records (does not apply for header)
+    :param encoding: the file encoding
+    :param strip_tags: remove any leading or trailing whitespaces in tag names (default: True)
+    :return: the ADI as a dict
+    :raises TooMuchHeadersException: if the data contains more than one header
+    :raises TagDefinitionException: if the tag definition is invalid or the length is not an integer
+    """
 
     with open(file_name, encoding=encoding) as af:
         data = af.read()
@@ -166,14 +178,17 @@ def load(file_name: str, skip: int = 0, encoding=None, strip_tags: bool = True) 
     return loads(data, skip, strip_tags)
 
 
-def pack(param: str, value: str, dtype: str = None) -> str:
+def pack(param: str, value: str, dtype: str = None, repl_non_ascii=True) -> str:
     """Generates ADI tag if value is not empty
     Does not generate tags for *_INTL types as required by specification.
 
     :param param: the tag parameter (converted to uppercase)
     :param value: the tag value (or tag definition if param is a USERDEF field)
     :param dtype: the optional datatype (mainly used for USERDEFx in header)
+    :param repl_non_ascii: replace non ASCII characters with "_" and generates a warning instead of raising StringNotASCIIException
     :return: <param:length>value
+    :raises StringNotASCIIException: if the value contains non ASCII characters
+    :raises IllegalParameterException: if parameter or data type contains invalid characters
     """
 
     if not re.fullmatch(REGEX_PARAM, param):
@@ -181,7 +196,11 @@ def pack(param: str, value: str, dtype: str = None) -> str:
 
     if not param.upper().endswith('_INTL'):
         if isinstance(value, str) and not re.fullmatch(REGEX_ASCII, value):
-            raise StringNotASCIIException(f'Value "{value}" in parameter "{param}" contains non ASCII characters')
+                if repl_non_ascii:
+                    value = replace_non_ascii(value)
+                    warn(f'Replaced non ASCII chars in tag "{param}"', NonASCIIWarning)
+                else:
+                    raise StringNotASCIIException(f'Value "{value}" in parameter "{param}" contains non ASCII characters')
 
         if dtype:
             if len(dtype) > 1 or dtype not in 'BNDTSEL':
@@ -194,7 +213,7 @@ def pack(param: str, value: str, dtype: str = None) -> str:
 
 
 def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__,
-          linebreaks: bool = True, spaces: int = 1) -> Iterator[str]:
+          linebreaks: bool = True, spaces: int = 1, repl_non_ascii=True) -> Iterator[str]:
     """Takes a dictionary and converts it to ADI format
     Parameters can be in upper or lower case. The output is upper case. The user must take care
     that parameters are not doubled!
@@ -209,7 +228,10 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__,
     :param comment: the comment to induce the header
     :param linebreaks: Format output with additional linebreaks for readability
     :param spaces: Number of spaces between fields
-    :return: an iterator of chunks of the ADI (header, record 1, ..., record n)"""
+    :param repl_non_ascii: replace non ASCII characters with "_" and generates a warning instead of raising StringNotASCIIException
+    :return: an iterator of chunks of the ADI (header, record 1, ..., record n)
+    :raises StringNotASCIIException: if a value in a record contains non ASCII characters
+    :raises IllegalParameterException: if a parameter or data type in a record contains invalid characters"""
 
     data_dict = copy.deepcopy(data_dict)
 
@@ -224,30 +246,42 @@ def dumpi(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__,
 
         data = comment + ' \n'
 
-        for p in data_dict['HEADER']:
-            if p.upper() in ('ADIF_VER', 'PROGRAMID', 'PROGRAMVERSION', 'CREATED_TIMESTAMP'):
-                data += pack(p.upper(), data_dict['HEADER'][p]) + ('\n' if linebreaks else field_separator)
-                default.pop(p.upper())
-            elif p.upper() == 'USERDEFS':
-                for i, u in enumerate(data_dict['HEADER'][p], 1):
-                    data += pack(f'USERDEF{i}', u['userdef'], u['dtype']) + ('\n' if linebreaks else field_separator)
-        for p in default:
-            data += pack(p, default[p]) + ('\n' if linebreaks else field_separator)
-        data += '<EOH>'
-        yield data
+        try:
+            for p in data_dict['HEADER']:
+                if p.upper() in ('ADIF_VER', 'PROGRAMID', 'PROGRAMVERSION', 'CREATED_TIMESTAMP'):
+                    data += (pack(p.upper(), data_dict['HEADER'][p], repl_non_ascii=repl_non_ascii)
+                             + ('\n' if linebreaks else field_separator))
+                    default.pop(p.upper())
+                elif p.upper() == 'USERDEFS':
+                    for i, u in enumerate(data_dict['HEADER'][p], 1):
+                        data += pack(f'USERDEF{i}', u['userdef'], u['dtype'], repl_non_ascii=repl_non_ascii) + (
+                            '\n' if linebreaks else field_separator)
+            for p in default:
+                data += pack(p, default[p], repl_non_ascii=repl_non_ascii) + ('\n' if linebreaks else field_separator)
+            data += '<EOH>'
+            yield data
+        except StringNotASCIIException as exc:
+            raise StringNotASCIIException(f'Header: {exc.args[0]}') from None
+        except IllegalParameterException as exc:
+            raise IllegalParameterException(f'Header: {exc.args[0]}') from None
 
     if 'RECORDS' in data_dict:
-        for r in data_dict['RECORDS']:
+        for r_num, r in enumerate(data_dict['RECORDS']):
             data = ''
             empty = True
             for i, pv in enumerate(zip(r.keys(), r.values()), 1):
-                tag = pack(pv[0].upper(), pv[1])
-                if tag:
-                    empty = False
-                    if linebreaks:
-                        data += tag + ('\n' if i % 5 == 0 else field_separator)
-                    else:
-                        data += tag + field_separator
+                try:
+                    tag = pack(pv[0].upper(), pv[1], repl_non_ascii=repl_non_ascii)
+                    if tag:
+                        empty = False
+                        if linebreaks:
+                            data += tag + ('\n' if i % 5 == 0 else field_separator)
+                        else:
+                            data += tag + field_separator
+                except StringNotASCIIException as exc:
+                    raise StringNotASCIIException(f'Record #{r_num + 1}: {exc.args[0]}') from None
+                except IllegalParameterException as exc:
+                    raise IllegalParameterException(f'Record #{r_num + 1}: {exc.args[0]}') from None
             if not data.endswith('\n'):
                 data += '\n' if linebreaks else ''
 
@@ -270,7 +304,8 @@ def dumps(data_dict: dict, comment: str = 'ADIF export by ' + __proj_name__, lin
     :param data_dict: the dictionary with header and records
     :param comment: the comment to induce the header
     :param linebreaks: Format output with additional linebreaks for readability
-    :return: the complete ADI as a string"""
+    :return: the complete ADI as a string
+    :raises IllegalParameterException: if a parameter or data type in a record contains invalid characters"""
 
     line_separator = '\n\n' if linebreaks else '\n'
 
@@ -293,7 +328,8 @@ def dump(file_name: str, data_dict: dict, comment: str = 'ADIF export by ' + __p
     :param data_dict: the dictionary with header and records
     :param comment: the comment to induce the header
     :param linebreaks: format output with additional linebreaks for readability
-    :param encoding: the file encoding"""
+    :param encoding: the file encoding
+    :raises IllegalParameterException: if a parameter or data type in a record contains invalid characters"""
 
     with open(file_name, 'w', encoding=encoding) as af:
         first = True

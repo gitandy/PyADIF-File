@@ -15,8 +15,10 @@ class DumpADI(unittest.TestCase):
         self.assertEqual('<USERDEF1:19:E>SweaterSize,{S,M,L}',
                          adif_file.adi.pack('USERDEF1', 'SweaterSize,{S,M,L}', 'E'))
 
-        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'X')
-        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}', 'NN')
+        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}',
+                          'X')
+        self.assertRaises(adif_file.adi.IllegalDataTypeException, adif_file.adi.pack, 'USERDEF1', 'SweaterSize,{S,M,L}',
+                          'NN')
 
     def test_15_pack_record_tag(self):
         self.assertEqual('<NAME:5>Joerg', adif_file.adi.pack('NAME', 'Joerg'))
@@ -27,10 +29,16 @@ class DumpADI(unittest.TestCase):
 
         self.assertEqual('<MY_NAME:5>Peter', adif_file.adi.pack('MY_Name', 'Peter'))
 
-        self.assertRaises(adif_file.adi.StringNotASCIIException, adif_file.adi.pack, 'NAME', 'Jörg')
-        self.assertRaises(adif_file.adi.StringNotASCIIException, adif_file.adi.pack, 'NAME', 'Schloß')
+        self.assertRaises(adif_file.adi.StringNotASCIIException, adif_file.adi.pack, 'NAME', 'Jörg', None, False)
+        self.assertRaises(adif_file.adi.StringNotASCIIException, adif_file.adi.pack, 'NAME', 'Schloß', None, False)
         self.assertRaises(adif_file.adi.IllegalParameterException, adif_file.adi.pack, 'MY_ NAME', 'Peter')
         self.assertRaises(adif_file.adi.IllegalParameterException, adif_file.adi.pack, 'MY~NAME', 'Peter')
+
+        self.assertWarns(adif_file.adi.NonASCIIWarning, adif_file.adi.pack, 'NAME', 'Jörg')
+        self.assertWarns(adif_file.adi.NonASCIIWarning, adif_file.adi.pack, 'NAME', 'Schloß')
+        self.assertEqual('<NAME:4>J_rg', adif_file.adi.pack('NAME', 'Jörg'))
+        self.assertEqual('<NAME:6>Schlo_', adif_file.adi.pack('name', 'Schloß'))
+
 
         # noinspection PyTypeChecker
         self.assertEqual('<DIST:2>99', adif_file.adi.pack('DIST', 99))
@@ -132,32 +140,32 @@ class DumpADI(unittest.TestCase):
         os.remove(temp_file)
 
     def test_31_dump_a_file_ln_sp(self):
-            adi_dict = {
-                'HEADER': {'PROGRAMID': 'TProg',
-                           'ADIF_VER': '3',
-                           'PROGRAMVERSION': '1',
-                           'CREATED_TIMESTAMP': '1234'},
-                'RECORDS': [{'TEST1': 'test',
-                             'TEST2': 'test2'},
-                            {'TEST1': 'test3',
-                             'TEST2': 'test4'}]
-            }
+        adi_dict = {
+            'HEADER': {'PROGRAMID': 'TProg',
+                       'ADIF_VER': '3',
+                       'PROGRAMVERSION': '1',
+                       'CREATED_TIMESTAMP': '1234'},
+            'RECORDS': [{'TEST1': 'test',
+                         'TEST2': 'test2'},
+                        {'TEST1': 'test3',
+                         'TEST2': 'test4'}]
+        }
 
-            adi_exp = '''ADIF export by PyADIF-File 
+        adi_exp = '''ADIF export by PyADIF-File 
 <PROGRAMID:5>TProg  <ADIF_VER:1>3  <PROGRAMVERSION:1>1  <CREATED_TIMESTAMP:4>1234  <EOH>
 <TEST1:4>test  <TEST2:5>test2  <EOR>
 <TEST1:5>test3  <TEST2:5>test4  <EOR>'''
 
-            temp_file = get_file_path('testdata/~test.adi')
+        temp_file = get_file_path('testdata/~test.adi')
 
-            adif_file.adi.dump(temp_file, adi_dict, linebreaks=False, spaces=2)
+        adif_file.adi.dump(temp_file, adi_dict, linebreaks=False, spaces=2)
 
-            self.assertTrue(os.path.isfile(temp_file))
+        self.assertTrue(os.path.isfile(temp_file))
 
-            with open(temp_file) as af:
-                self.assertEqual(adi_exp, af.read())
+        with open(temp_file) as af:
+            self.assertEqual(adi_exp, af.read())
 
-            os.remove(temp_file)
+        os.remove(temp_file)
 
     def test_40_dump_no_change(self):
         adi_dict = {
