@@ -1,3 +1,5 @@
+**Repository moved to [Codeberg](https://codeberg.org/dragoncode/PyADIF-File)**
+
 PyADIF-File
 ===========
 
@@ -86,4 +88,5 @@ PyADIF-File &copy; 2023-2025 by Andreas Schawo is licensed under [CC BY-SA 4.0](
 PyADIF-File uses
 * xmlschema Copyright (c), 2016-2022, SISSA (Scuola Internazionale Superiore di Studi Avanzati)
 * xmltodict Copyright (c), 2012 Martin Blech and individual contributors
+
 
